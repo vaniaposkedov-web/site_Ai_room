@@ -13,8 +13,27 @@ import Cases from '@/sections/Cases'
 import Testimonials from '@/sections/Testimonials'
 import ContactForm from '@/sections/ContactForm'
 import CTA from '@/sections/CTA'
+import { useScrollSpy } from '@/hooks/useScrollSpy'
+
+const SECTION_IDS = [
+  'hero',
+  'marquee',
+  'solutions',
+  'step-showcase',
+  'try-on',
+  'configurator',
+  'flip-deck',
+  'categories',
+  'calculator',
+  'cases',
+  'testimonials',
+  'contact',
+  'cta',
+]
 
 export default function App() {
+  useScrollSpy(SECTION_IDS)
+
   return (
     <div className="min-h-screen bg-brand-dark">
       <Header />
