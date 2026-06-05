@@ -1,7 +1,7 @@
 import BrandMark from '@/components/BrandMark'
 
-const words = ['AI Персонализация', 'Рост Конверсии', 'Контент-Автоматизация', 'AI Рекомендации',
-  'ROAS Оптимизация', 'Retention AI', 'A/B Тестирование', 'Предикт Спроса']
+const words = ['Карточки для маркетплейсов', 'ИИ-обработка фото', 'ИИ-редизайн фото', 'Нейросеть',
+  'Инфографика для карточек', 'Замена фона', 'Wildberries', 'Ozon', 'Продающие карточки', 'AI-фотосессия']
 
 export default function Marquee() {
   const items = [...words, ...words]

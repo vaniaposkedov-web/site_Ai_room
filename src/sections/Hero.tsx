@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight } from 'lucide-react'
 /* ──────────────────────────────────
    Typing headline
 ────────────────────────────────── */
-const headlines = ['E-commerce с AI-агентами', 'конверсию до 4.8%', 'рост ROI на 340%']
+const headlines = ['карточек маркетплейсов', 'ИИ-редизайна фото', 'ИИ-обработки фото']
 function TypewriterHeadline() {
   const [idx, setIdx]   = useState(0)
   const [text, setText] = useState('')
@@ -60,7 +60,7 @@ export default function Hero() {
           transition={{ duration: 0.5 }}
           className="badge mb-8"
         >
-          <Sparkles size={11} /> AI-агентство нового поколения
+          <Sparkles size={11} /> Нейросеть для маркетплейсов
         </motion.div>
 
         {/* Title */}
@@ -70,7 +70,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="font-display font-black text-[26px] sm:text-4xl lg:text-[58px] leading-[1.08] tracking-tight text-white mb-6"
         >
-          Масштабируем
+          Нейросеть для
           <br />
           <TypewriterHeadline />
         </motion.h1>
@@ -82,9 +82,10 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.22 }}
           className="text-lg sm:text-xl text-white/50 leading-relaxed max-w-[520px] mb-10"
         >
-          AI-агенты для <span className="text-white/90 font-semibold">поддержки</span>,{' '}
-          <span className="text-white/90 font-semibold">контента</span> и{' '}
-          <span className="text-brand-yellow font-semibold">цен</span> — больше продаж без роста команды.
+          Загрузите фото товара — нейросеть сделает{' '}
+          <span className="text-white/90 font-semibold">редизайн</span> и{' '}
+          <span className="text-white/90 font-semibold">обработку</span> и соберёт{' '}
+          <span className="text-brand-yellow font-semibold">продающую карточку</span> для Wildberries и Ozon.
         </motion.p>
 
         {/* CTA */}
