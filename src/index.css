@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ── Theme tokens ─────────────────────────────── */
+@theme {
+  --color-brand-yellow:   #FFE135;
+  --color-brand-yellow-2: #FFF3A3;
+  --color-brand-dark:     #262626;
+  --color-brand-card:     #1A1A1A;
+  --color-brand-card-2:   #1E1E1E;
+  --color-brand-surface:  #141414;
+  --color-brand-border:   rgba(255,225,53,0.15);
+  --color-brand-muted:    rgba(255,255,255,0.45);
+
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #262626;
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #1A1A1A; }
+  ::-webkit-scrollbar-thumb { background: #FFE135; border-radius: 3px; }
+  ::selection { background: rgba(255,225,53,0.25); color: #fff; }
+}
+
+/* ── Utilities ─────────────────────────────────── */
+@layer utilities {
+  /* Typography */
+  .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .text-gradient {
+    background: linear-gradient(135deg, #FFE135 0%, #FFF3A3 60%, #FFD700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-glow { text-shadow: 0 0 30px rgba(255,225,53,0.5); }
+
+  /* Glass surfaces */
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .glass-yellow {
+    background: rgba(255,225,53,0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,225,53,0.2);
+  }
+  .glass-card {
+    background: #1A1A1A;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+  }
+  .glass-card:hover {
+    border-color: rgba(255,225,53,0.2);
+  }
+
+  /* Glow effects */
+  .glow-yellow { box-shadow: 0 0 40px rgba(255,225,53,0.2), 0 0 80px rgba(255,225,53,0.05); }
+  .glow-yellow-sm { box-shadow: 0 0 20px rgba(255,225,53,0.35); }
+  .glow-ring { box-shadow: 0 0 0 1px rgba(255,225,53,0.3), 0 0 20px rgba(255,225,53,0.15); }
+
+  /* Radial glow bg */
+  .radial-glow {
+    position: relative;
+  }
+  .radial-glow::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(255,225,53,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Noise texture overlay */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  /* Pill badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,225,53,0.1);
+    border: 1px solid rgba(255,225,53,0.25);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #FFE135;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  /* Dot grid background */
+  .dot-grid {
+    background-image: radial-gradient(rgba(255,225,53,0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Animated gradient border */
+  .border-animated {
+    position: relative;
+    border-radius: 14px;
+  }
+  .border-animated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,225,53,0.5), rgba(255,255,255,0.05), rgba(255,225,53,0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Typing cursor */
+  .cursor::after {
+    content: '|';
+    color: #FFE135;
+    animation: blink 0.8s step-end infinite;
+    margin-left: 2px;
+  }
+
+  /* 3D card flip */
+  .perspective-1200 { perspective: 1200px; }
+  .preserve-3d     { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .rotate-y-180    { transform: rotateY(180deg); }
+
+  /* Hide native scrollbar for marquee containers */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ── Keyframes ─────────────────────────────────── */
+@keyframes blink   { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes float   { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-10px)} }
+@keyframes spin    { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes pulse-ring {
+  0%  { transform: scale(1);   opacity: 0.6; }
+  100%{ transform: scale(1.8); opacity: 0;   }
+}
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes slide-up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes count-up { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
+
+.animate-float      { animation: float 5s ease-in-out infinite; }
+.animate-float-d1   { animation: float 5s ease-in-out infinite 0.9s; }
+.animate-float-d2   { animation: float 5s ease-in-out infinite 1.8s; }
+.animate-spin-slow  { animation: spin 20s linear infinite; }
+.animate-marquee    { animation: marquee 30s linear infinite; }
+.animate-slide-up   { animation: slide-up 0.5s ease forwards; }
