@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Sparkles, Wand2, Sun, Eraser, BadgeCheck, ArrowRight } from 'lucide-react'
 
 /* ─────────────────────────────────
@@ -80,7 +80,7 @@ function BeforeAfter({ example }: { example: Example }) {
   return (
     <div
       ref={trackRef}
-      className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden select-none border border-white/[0.08] bg-[#141414] cursor-ew-resize"
+      className="relative w-full h-full rounded-2xl overflow-hidden select-none border border-white/[0.08] bg-[#141414] cursor-ew-resize"
       onMouseDown={(e) => { dragging.current = true; applyPos(e.clientX) }}
       onTouchStart={(e) => { dragging.current = true; applyPos(e.touches[0].clientX) }}
     >
@@ -125,16 +125,44 @@ function BeforeAfter({ example }: { example: Example }) {
 /* ─────────────────────────────────
    Section
 ───────────────────────────────── */
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? '55%' : '-55%', opacity: 0, scale: 0.9 }),
+  center: { x: '0%', opacity: 1, scale: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? '-55%' : '55%', opacity: 0, scale: 0.9 }),
+}
+
 export default function Solutions() {
-  const [active, setActive] = useState(EXAMPLES[0].id)
-  const example = EXAMPLES.find((e) => e.id === active)!
+  const [index, setIndex] = useState(0)
+  const [dir, setDir] = useState(1)
+  const [restartKey, setRestartKey] = useState(0)
+  const example = EXAMPLES[index]
+
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { amount: 0.3 })
+
+  // Авто-перелистывание справа налево, пока пользователь не выбрал вручную.
+  // Перезапускается при клике (restartKey) и при возврате в зону видимости.
+  useEffect(() => {
+    if (!inView) return
+    const id = setInterval(() => {
+      setDir(1)
+      setIndex((i) => (i + 1) % EXAMPLES.length)
+    }, 3600)
+    return () => clearInterval(id)
+  }, [inView, restartKey])
+
+  const pick = (i: number) => {
+    setDir(i > index ? 1 : -1)
+    setIndex(i)
+    setRestartKey((k) => k + 1)
+  }
 
   return (
     <section id="solutions" className="relative py-24 px-6 overflow-hidden">
       <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
       <div className="absolute top-20 right-0 w-[420px] h-[420px] rounded-full bg-[#FFE135]/[0.04] blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 max-w-6xl mx-auto">
+      <div ref={sectionRef} className="relative z-10 max-w-6xl mx-auto">
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -160,44 +188,22 @@ export default function Solutions() {
 
         {/* Content */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center">
-          {/* Slider + switcher */}
-          <div>
-            <AnimatePresence mode="wait">
+          {/* Slider with auto right-to-left slide */}
+          <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl">
+            <AnimatePresence mode="popLayout" custom={dir}>
               <motion.div
                 key={example.id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.35 }}
+                custom={dir}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0"
               >
                 <BeforeAfter example={example} />
               </motion.div>
             </AnimatePresence>
-
-            {/* Product switcher */}
-            <div className="flex gap-2.5 mt-4">
-              {EXAMPLES.map((ex) => {
-                const isOn = ex.id === active
-                return (
-                  <button
-                    key={ex.id}
-                    onClick={() => setActive(ex.id)}
-                    className="relative flex-1 rounded-xl overflow-hidden aspect-[4/3] bg-[#141414] group"
-                    aria-label={ex.label}
-                  >
-                    <img src={ex.after} alt={ex.label} className="w-full h-full object-cover" loading="lazy" />
-                    <div className={`absolute inset-0 transition-colors ${isOn ? 'bg-black/0' : 'bg-black/45 group-hover:bg-black/25'}`} />
-                    <div
-                      className="absolute inset-0 rounded-xl pointer-events-none transition-shadow"
-                      style={{ boxShadow: isOn ? 'inset 0 0 0 2px #FFE135' : 'inset 0 0 0 0 transparent' }}
-                    />
-                    <span className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white text-center truncate drop-shadow">
-                      {ex.label}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
           </div>
 
           {/* Info panel */}
@@ -248,6 +254,36 @@ export default function Solutions() {
               Обработать своё фото
               <ArrowRight size={18} />
             </motion.button>
+
+            {/* Product switcher — under the CTA */}
+            <div className="mt-6">
+              <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-white/30 mb-2.5">
+                Примеры товаров
+              </div>
+              <div className="flex gap-2.5">
+                {EXAMPLES.map((ex, i) => {
+                  const isOn = i === index
+                  return (
+                    <button
+                      key={ex.id}
+                      onClick={() => pick(i)}
+                      className="relative flex-1 rounded-xl overflow-hidden aspect-[4/3] bg-[#141414] group"
+                      aria-label={ex.label}
+                    >
+                      <img src={ex.after} alt={ex.label} className="w-full h-full object-cover" loading="lazy" />
+                      <div className={`absolute inset-0 transition-colors ${isOn ? 'bg-black/0' : 'bg-black/50 group-hover:bg-black/25'}`} />
+                      <div
+                        className="absolute inset-0 rounded-xl pointer-events-none transition-shadow"
+                        style={{ boxShadow: isOn ? 'inset 0 0 0 2px #FFE135' : 'inset 0 0 0 0 transparent' }}
+                      />
+                      <span className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white text-center truncate drop-shadow">
+                        {ex.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>

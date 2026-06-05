@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Menu, X } from 'lucide-react'
 
 const NAV = [
-  { label: 'Решения',     href: '#solutions'    },
-  { label: 'Конфигуратор',href: '#configurator' },
-  { label: 'Кейсы',       href: '#cases'         },
-  { label: 'Калькулятор', href: '#calculator'    },
-  { label: 'Контакты',    href: '#contact'       },
+  { label: 'Как это работает', href: '#step-showcase' },
+  { label: 'Примеры',          href: '#solutions'     },
+  { label: 'Тарифы',           href: '#pricing'       },
+  { label: 'Вопросы',          href: '#faq'           },
+  { label: 'Контакты',         href: '#contact'       },
 ]
 
 export default function Header() {

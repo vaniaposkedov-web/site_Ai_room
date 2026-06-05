@@ -65,25 +65,35 @@ export default function TryOnSimulator() {
   const [connected, setConnected] = useState<string[]>([])
   const [lastApplied, setLastApplied] = useState<string | null>(null)
   const [pulse, setPulse] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
-  const stageRef = useRef<HTMLDivElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, margin: '-100px' })
 
-  // check whether a drag ended over the central photo
+  // курсор над центральным фото (с прощающим отступом)?
+  const isOverDrop = (info: PanInfo) => {
+    const r = dropRef.current?.getBoundingClientRect()
+    if (!r) return false
+    const pad = 56 // запас вокруг фото, чтобы попадать было легко
+    return (
+      info.point.x >= r.left - pad &&
+      info.point.x <= r.right + pad &&
+      info.point.y >= r.top - pad &&
+      info.point.y <= r.bottom + pad
+    )
+  }
+
+  // живая подсветка зоны, пока тянем карточку
+  const handleDragMove = (info: PanInfo) => setDragOver(isOverDrop(info))
+
   const handleDrop = (id: string) => (info: PanInfo) => {
-    const drop = dropRef.current?.getBoundingClientRect()
-    if (!drop) return
-    const cx = drop.left + drop.width / 2
-    const cy = drop.top + drop.height / 2
-    const dist = Math.hypot(info.point.x - cx, info.point.y - cy)
-    if (dist < drop.width * 0.6) {
-      setConnected((arr) => (arr.includes(id) ? arr : [...arr, id]))
-      setLastApplied(id)
-      setPulse(true)
-      setTimeout(() => setPulse(false), 600)
-    }
+    setDragOver(false)
+    if (!isOverDrop(info)) return
+    setConnected((arr) => (arr.includes(id) ? arr : [...arr, id]))
+    setLastApplied(id)
+    setPulse(true)
+    setTimeout(() => setPulse(false), 600)
   }
 
   const disconnect = (id: string) => {
@@ -145,10 +155,7 @@ export default function TryOnSimulator() {
         </div>
 
         {/* Stage */}
-        <div
-          ref={stageRef}
-          className="relative mx-auto w-full max-w-[560px] aspect-square"
-        >
+        <div className="relative mx-auto w-full max-w-[560px] aspect-square">
           {/* connection lines */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
             {ITEMS.map((item, i) => {
@@ -170,10 +177,10 @@ export default function TryOnSimulator() {
             <motion.div
               ref={dropRef}
               animate={{
-                boxShadow: pulse
-                  ? '0 0 0 6px rgba(255,225,53,0.35), 0 20px 50px rgba(0,0,0,0.5)'
+                boxShadow: pulse || dragOver
+                  ? '0 0 0 6px rgba(255,225,53,0.4), 0 20px 50px rgba(0,0,0,0.5)'
                   : '0 0 0 2px rgba(255,225,53,0.18), 0 20px 50px rgba(0,0,0,0.45)',
-                scale: pulse ? 1.04 : 1,
+                scale: pulse ? 1.05 : dragOver ? 1.03 : 1,
               }}
               transition={{ duration: 0.3 }}
               className="relative w-full h-full rounded-2xl overflow-hidden bg-[#141414] border border-[#FFE135]/20"
@@ -200,7 +207,11 @@ export default function TryOnSimulator() {
               {/* Counter */}
               <div className="absolute bottom-2 left-2 right-2 text-center">
                 <div className="text-[10px] text-[#FFE135] font-mono">
-                  {connected.length ? `Образ из ${connected.length} вещей` : 'Перетащите вещь сюда'}
+                  {dragOver
+                    ? 'Отпустите — наденем ✦'
+                    : connected.length
+                    ? `Образ из ${connected.length} вещей`
+                    : 'Перетащите вещь сюда'}
                 </div>
               </div>
             </motion.div>
@@ -208,11 +219,12 @@ export default function TryOnSimulator() {
 
           {/* Wardrobe cards around the circle */}
           {ITEMS.map((item, i) => (
-            <WardrobeCardWrapper
+            <WardrobeCard
               key={item.id}
               item={item}
               pos={slotPos(i, ITEMS.length)}
               connected={connected.includes(item.id)}
+              onDragMove={handleDragMove}
               onDrop={handleDrop(item.id)}
               onDisconnect={() => disconnect(item.id)}
             />
@@ -257,41 +269,21 @@ export default function TryOnSimulator() {
   )
 }
 
-/* wrapper that wires framer drag end into our drop detection */
-function WardrobeCardWrapper({
+/* ─────────────────────────────────
+   Draggable wardrobe card
+───────────────────────────────── */
+function WardrobeCard({
   item,
   pos,
   connected,
+  onDragMove,
   onDrop,
   onDisconnect,
 }: {
   item: Item
   pos: { x: number; y: number }
   connected: boolean
-  onDrop: (info: PanInfo) => void
-  onDisconnect: () => void
-}) {
-  return (
-    <WardrobeCardInner
-      item={item}
-      pos={pos}
-      connected={connected}
-      onDrop={onDrop}
-      onDisconnect={onDisconnect}
-    />
-  )
-}
-
-function WardrobeCardInner({
-  item,
-  pos,
-  connected,
-  onDrop,
-  onDisconnect,
-}: {
-  item: Item
-  pos: { x: number; y: number }
-  connected: boolean
+  onDragMove: (info: PanInfo) => void
   onDrop: (info: PanInfo) => void
   onDisconnect: () => void
 }) {
@@ -302,26 +294,29 @@ function WardrobeCardInner({
       className="absolute z-20 w-[104px] sm:w-[120px]"
       style={{ left: `${pos.x}%`, top: `${pos.y}%`, translateX: '-50%', translateY: '-50%' }}
     >
-      <motion.button
+      <motion.div
         drag
         dragSnapToOrigin
-        dragElastic={0.5}
+        dragElastic={0.16}
+        dragMomentum={false}
+        whileDrag={{ scale: 1.08 }}
         onDragStart={() => setDragging(true)}
+        onDrag={(_e, info: PanInfo) => onDragMove(info)}
         onDragEnd={(_e, info: PanInfo) => {
           setDragging(false)
           onDrop(info)
         }}
         onClick={() => connected && onDisconnect()}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.97 }}
-        animate={{
-          borderColor: connected ? 'rgba(255,225,53,0.9)' : 'rgba(255,255,255,0.08)',
-        }}
         className="relative w-full cursor-grab active:cursor-grabbing select-none rounded-2xl border bg-[#1A1A1A] p-2 flex flex-col gap-1.5"
         style={{
           touchAction: 'none',
           zIndex: dragging ? 50 : 20,
-          boxShadow: connected ? '0 0 22px rgba(255,225,53,0.3)' : '0 6px 18px rgba(0,0,0,0.35)',
+          borderColor: connected ? 'rgba(255,225,53,0.9)' : 'rgba(255,255,255,0.08)',
+          boxShadow: dragging
+            ? '0 18px 40px rgba(0,0,0,0.5)'
+            : connected
+            ? '0 0 22px rgba(255,225,53,0.3)'
+            : '0 6px 18px rgba(0,0,0,0.35)',
         }}
       >
         <div className="relative aspect-square rounded-xl overflow-hidden bg-[#141414]">
@@ -336,7 +331,7 @@ function WardrobeCardInner({
         <div className="text-[8px] uppercase tracking-wider text-white/30 font-mono text-center">
           {connected ? 'клик — снять' : 'тяни к фото'}
         </div>
-      </motion.button>
+      </motion.div>
     </motion.div>
   )
 }

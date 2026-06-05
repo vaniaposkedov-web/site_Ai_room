@@ -7,8 +7,8 @@ import StepShowcase from '@/sections/StepShowcase'
 import TryOnSimulator from '@/sections/TryOnSimulator'
 import CategoriesGrid from '@/sections/CategoriesGrid'
 import FlipDeck from '@/sections/FlipDeck'
-import RoiCalculator from '@/sections/RoiCalculator'
-import Cases from '@/sections/Cases'
+import Plans from '@/sections/Plans'
+import Faq from '@/sections/Faq'
 import Testimonials from '@/sections/Testimonials'
 import ContactForm from '@/sections/ContactForm'
 import CTA from '@/sections/CTA'
@@ -22,8 +22,8 @@ const SECTION_IDS = [
   'try-on',
   'flip-deck',
   'categories',
-  'calculator',
-  'cases',
+  'pricing',
+  'faq',
   'testimonials',
   'contact',
   'cta',
@@ -43,8 +43,8 @@ export default function App() {
         <TryOnSimulator />
         <FlipDeck />
         <CategoriesGrid />
-        <RoiCalculator />
-        <Cases />
+        <Plans />
+        <Faq />
         <Testimonials />
         <ContactForm />
         <CTA />

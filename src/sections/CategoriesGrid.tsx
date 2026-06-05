@@ -185,7 +185,7 @@ export default function CategoriesGrid() {
     if (!el) return
     let raf = 0
     let last = performance.now()
-    const SPEED = 28 // px / sec
+    const SPEED = 55 // px / sec
 
     const tick = (t: number) => {
       const dt = (t - last) / 1000

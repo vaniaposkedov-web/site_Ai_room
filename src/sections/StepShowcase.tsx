@@ -131,21 +131,23 @@ function CardPreview({ step }: { step: number }) {
 ───────────────────────────────── */
 export default function StepShowcase() {
   const [active, setActive] = useState(0)
-  const [auto, setAuto] = useState(true)
+  const [restartKey, setRestartKey] = useState(0)
 
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: false, amount: 0.3 })
 
-  // Auto-advance through the 4 steps
+  // Автопоказ по умолчанию. Перезапускается, когда пользователь кликнул шаг
+  // (restartKey) или когда блок снова попал в зону видимости (inView).
   useEffect(() => {
-    if (!auto || !inView) return
-    const id = setInterval(() => setActive((a) => (a + 1) % STEPS.length), 2200)
+    if (!inView) return
+    const id = setInterval(() => setActive((a) => (a + 1) % STEPS.length), 2600)
     return () => clearInterval(id)
-  }, [auto, inView])
+  }, [inView, restartKey])
 
+  // клик по шагу — переходим к нему и перезапускаем таймер автопоказа
   const pick = (i: number) => {
     setActive(i)
-    setAuto(false)
+    setRestartKey((k) => k + 1)
   }
 
   return (
@@ -193,77 +195,56 @@ export default function StepShowcase() {
         </div>
 
         {/* Stepper + preview */}
-        <div className="grid lg:grid-cols-[1fr_420px] gap-10 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-[1fr_440px] gap-10 lg:gap-16 items-center">
           {/* Steps */}
-          <div className="relative">
-            {/* vertical track */}
-            <div className="absolute left-[23px] top-3 bottom-3 w-px bg-white/[0.08]" />
+          <div className="relative flex flex-col gap-4 lg:grid lg:grid-rows-4 lg:gap-0 lg:h-[600px]">
+            {/* vertical track — only on desktop, ends at the last node (no tail) */}
+            <div className="hidden lg:block absolute left-8 top-[12.5%] h-[75%] w-px bg-white/[0.08]" />
             <motion.div
-              className="absolute left-[23px] top-3 w-px bg-[#FFE135]"
-              animate={{ height: `${(active / (STEPS.length - 1)) * 100}%` }}
+              className="hidden lg:block absolute left-8 top-[12.5%] w-px bg-[#FFE135]"
+              animate={{ height: `${(active / (STEPS.length - 1)) * 75}%` }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              style={{ maxHeight: 'calc(100% - 24px)' }}
             />
 
-            <div className="flex flex-col gap-3">
-              {STEPS.map((step, i) => {
-                const Icon = step.icon
-                const isActive = i === active
-                const isDone = i < active
-                return (
-                  <button
-                    key={step.num}
-                    onClick={() => pick(i)}
-                    className="relative flex items-start gap-4 text-left group"
+            {STEPS.map((step, i) => {
+              const Icon = step.icon
+              const isActive = i === active
+              const isDone = i < active
+              return (
+                <button
+                  key={step.num}
+                  onClick={() => pick(i)}
+                  className="relative flex items-center gap-5 text-left group lg:h-full"
+                >
+                  {/* node */}
+                  <motion.div
+                    animate={{
+                      backgroundColor: isActive || isDone ? '#FFE135' : '#1A1A1A',
+                      borderColor: isActive || isDone ? '#FFE135' : 'rgba(255,255,255,0.1)',
+                      boxShadow: isActive ? '0 0 0 6px rgba(255,225,53,0.12)' : '0 0 0 0 transparent',
+                    }}
+                    className="relative z-10 w-16 h-16 rounded-full border flex items-center justify-center flex-shrink-0"
                   >
-                    {/* node */}
-                    <motion.div
-                      animate={{
-                        backgroundColor: isActive || isDone ? '#FFE135' : '#1A1A1A',
-                        borderColor: isActive || isDone ? '#FFE135' : 'rgba(255,255,255,0.1)',
-                        boxShadow: isActive ? '0 0 0 5px rgba(255,225,53,0.12)' : '0 0 0 0 transparent',
-                      }}
-                      className="relative z-10 w-12 h-12 rounded-full border flex items-center justify-center flex-shrink-0"
-                    >
-                      <Icon size={18} className={isActive || isDone ? 'text-[#262626]' : 'text-white/50'} strokeWidth={2.2} />
-                    </motion.div>
+                    <Icon size={24} className={isActive || isDone ? 'text-[#262626]' : 'text-white/50'} strokeWidth={2.2} />
+                  </motion.div>
 
-                    {/* text */}
-                    <div className={`pt-1.5 pb-3 transition-opacity ${isActive ? 'opacity-100' : 'opacity-55 group-hover:opacity-80'}`}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] text-[#FFE135]">{step.num}</span>
-                        <span className="font-display font-bold text-white text-base">{step.title}</span>
-                      </div>
-                      <AnimatePresence initial={false}>
-                        {isActive && (
-                          <motion.p
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-white/45 text-[13px] leading-relaxed mt-1.5 max-w-sm overflow-hidden"
-                          >
-                            {step.desc}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                  {/* text */}
+                  <div className={`transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-45 group-hover:opacity-75'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-sm text-[#FFE135]">{step.num}</span>
+                      <span className="font-display font-bold text-white text-lg md:text-xl">{step.title}</span>
                     </div>
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* auto toggle */}
-            <button
-              onClick={() => setAuto((v) => !v)}
-              className="mt-4 ml-16 text-[11px] text-white/40 hover:text-[#FFE135] transition-colors"
-            >
-              {auto ? '⏸ Остановить автопоказ' : '▶ Запустить автопоказ'}
-            </button>
+                    <p className="text-white/45 text-[14px] leading-relaxed mt-2 max-w-md">
+                      {step.desc}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
 
           {/* Preview */}
-          <div className="lg:sticky lg:top-24">
+          <div className="flex justify-center">
             <CardPreview step={active} />
           </div>
         </div>
