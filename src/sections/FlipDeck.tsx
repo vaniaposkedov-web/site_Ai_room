@@ -2,16 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import {
   Sparkles,
-  TrendingUp,
-  Bot,
-  Target,
   Image as ImageIcon,
   Layers,
-  Zap,
-  Ruler,
-  ShoppingBag,
-  Eye,
-  Tag,
   MessageCircle,
   Spade,
   Heart,
@@ -23,7 +15,7 @@ import type { LucideIcon } from 'lucide-react'
 /* ─────────────────────────────────
    Data
 ───────────────────────────────── */
-type PresetId = 'ecom' | 'fashion' | 'beauty' | 'b2b'
+type PresetId = 'clothes' | 'beauty' | 'electronics' | 'home'
 
 interface FlipCardData {
   icon: LucideIcon
@@ -37,10 +29,10 @@ interface FlipCardData {
 }
 
 const PRESETS: { id: PresetId; label: string; hint: string }[] = [
-  { id: 'ecom',    label: 'E-commerce', hint: 'Маркетплейсы и онлайн-магазины' },
-  { id: 'fashion', label: 'Fashion',    hint: 'Одежда, lookbook, lifestyle'    },
-  { id: 'beauty',  label: 'Beauty',     hint: 'Косметика, уход, парфюмерия'    },
-  { id: 'b2b',     label: 'B2B SaaS',   hint: 'Корпоративные AI-агенты'        },
+  { id: 'clothes',     label: 'Одежда',      hint: 'Одежда, обувь и аксессуары' },
+  { id: 'beauty',      label: 'Косметика',   hint: 'Косметика, уход и парфюм'   },
+  { id: 'electronics', label: 'Электроника', hint: 'Гаджеты и техника'          },
+  { id: 'home',        label: 'Для дома',    hint: 'Товары для дома и интерьер' },
 ]
 
 const SUITS = {
@@ -51,29 +43,29 @@ const SUITS = {
 } as const
 
 const DECKS: Record<PresetId, FlipCardData[]> = {
-  ecom: [
-    { icon: Sparkles,   suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A',  title: 'AI Контент-студия', metric: '×12',  metricLabel: 'к скорости',  back: 'Тысячи карточек товаров за день — фото, описание, инфографика.' },
-    { icon: TrendingUp, suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K',  title: 'AI Прайсинг',        metric: '+90%', metricLabel: 'маржи',       back: 'Динамические цены с учётом конкурентов и спроса в реальном времени.' },
-    { icon: Bot,        suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q',  title: 'AI Поддержка 24/7',  metric: '−65%', metricLabel: 'тикетов',     back: 'Многоязычный чат-бот, который ведёт сделку до оплаты.' },
-    { icon: Target,     suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J',  title: 'AI Ретаргет',        metric: '×3.2', metricLabel: 'ROAS',        back: 'Сегменты по поведению + автоматические креативы для каждого.' },
-  ],
-  fashion: [
-    { icon: ImageIcon, suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A',  title: 'Виртуальная съёмка', metric: '−85%', metricLabel: 'на студию',  back: 'Любой образ на модели за 12 секунд — без аренды и логистики.' },
-    { icon: Layers,    suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K',  title: 'AI Lookbook',         metric: '×8',   metricLabel: 'к коллажам', back: 'Готовые сеты из 5–7 вещей с фоном и аксессуарами.' },
-    { icon: Ruler,     suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q',  title: 'Размерный AI',        metric: '−42%', metricLabel: 'возвратов',  back: 'Точная рекомендация размера по антропометрии покупателя.' },
-    { icon: ShoppingBag,suit: SUITS.club.icon,   suitColor: SUITS.club.color,    rank: 'J',  title: 'AI Стилист',          metric: '+58%', metricLabel: 'AOV',        back: 'Подбор сочетающихся вещей в чате и на карточке товара.' },
+  clothes: [
+    { icon: ImageIcon,    suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'Студийное фото',  metric: '×20',  metricLabel: 'к скорости',  back: 'Фотосессия одежды без студии и моделей — за секунды.' },
+    { icon: Layers,       suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'Замена фона',     metric: '−90%', metricLabel: 'на ретушь',   back: 'Чистый белый или lifestyle-фон карточки в один клик.' },
+    { icon: Sparkles,     suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q', title: 'Инфографика',     metric: '+35%', metricLabel: 'к CTR',       back: 'Преимущества, состав и размеры прямо на фото товара.' },
+    { icon: MessageCircle,suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI-описание',     metric: '×8',   metricLabel: 'к выдаче',    back: 'Продающий текст с SEO-ключами под Wildberries и Ozon.' },
   ],
   beauty: [
-    { icon: Eye,         suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'Try-On зеркало',  metric: '×4.1',  metricLabel: 'к конверсии', back: 'Помада, тени, тон — примерка через камеру за секунду.' },
-    { icon: Sparkles,    suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'AI Уход-диагноз', metric: '+72%',  metricLabel: 'к LTV',       back: 'Опросник + фото → персональный rouitne и рекомендации.' },
-    { icon: MessageCircle,suit: SUITS.diamond.icon,suitColor: SUITS.diamond.color, rank: 'Q', title: 'AI Консьерж',     metric: '24/7',  metricLabel: 'ответы',      back: 'Эксперт по ингредиентам и противопоказаниям в один клик.' },
-    { icon: Tag,         suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI Naming',       metric: '×6',    metricLabel: 'к запускам',  back: 'Тестируем нейминг и упаковку до релиза — по сегментам.' },
+    { icon: ImageIcon,    suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'Макро-съёмка',    metric: '×15',  metricLabel: 'к скорости',  back: 'Текстуры и упаковка крупным планом без фотографа.' },
+    { icon: Layers,       suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'Чистый фон',      metric: '−85%', metricLabel: 'на ретушь',   back: 'Аккуратный фон и мягкие блики под бьюти-полку.' },
+    { icon: Sparkles,     suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q', title: 'Состав на фото',  metric: '+28%', metricLabel: 'к доверию',   back: 'Ключевые компоненты и эффект — прямо на карточке.' },
+    { icon: MessageCircle,suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI-описание',     metric: '×7',   metricLabel: 'к охвату',    back: 'Тексты с ключами «сыворотка», «уход», «крем» и т.д.' },
   ],
-  b2b: [
-    { icon: Bot,        suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'AI Sales Copilot', metric: '+34%', metricLabel: 'win-rate',     back: 'Контекст по сделке, follow-up и подсказки в реальном времени.' },
-    { icon: Layers,     suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'RAG Knowledge',    metric: '×9',   metricLabel: 'к скорости',   back: 'Ответы по внутренней документации с цитатами и источниками.' },
-    { icon: TrendingUp, suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q', title: 'AI Аналитик',      metric: '−70%', metricLabel: 'к репортам',   back: 'SQL-запросы и дашборды на естественном языке.' },
-    { icon: Zap,        suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI Workflow',      metric: '×5',   metricLabel: 'продуктивности', back: 'Автономные агенты для триажа, эскалации и тикетов.' },
+  electronics: [
+    { icon: ImageIcon,    suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'Ракурсы товара',  metric: '×12',  metricLabel: 'к скорости',  back: 'Несколько чистых ракурсов гаджета из одного фото.' },
+    { icon: Layers,       suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'Фон и тени',      metric: '−80%', metricLabel: 'на студию',   back: 'Студийный фон и мягкие тени за секунды.' },
+    { icon: Sparkles,     suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q', title: 'Характеристики',  metric: '+30%', metricLabel: 'к CTR',       back: 'Главные характеристики выносим на обложку карточки.' },
+    { icon: MessageCircle,suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI-описание',     metric: '×9',   metricLabel: 'к выдаче',    back: 'Описание с моделью, портами и параметрами товара.' },
+  ],
+  home: [
+    { icon: ImageIcon,    suit: SUITS.spade.icon,   suitColor: SUITS.spade.color,   rank: 'A', title: 'Lifestyle-сцена', metric: '×18',  metricLabel: 'к скорости',  back: 'Товар в интерьере без выездной съёмки.' },
+    { icon: Layers,       suit: SUITS.heart.icon,   suitColor: SUITS.heart.color,   rank: 'K', title: 'Замена фона',     metric: '−88%', metricLabel: 'на ретушь',   back: 'Под каталог или под уютную домашнюю сцену.' },
+    { icon: Sparkles,     suit: SUITS.diamond.icon, suitColor: SUITS.diamond.color, rank: 'Q', title: 'Инфографика',     metric: '+33%', metricLabel: 'к CTR',       back: 'Размеры, материал и уход — прямо на фото.' },
+    { icon: MessageCircle,suit: SUITS.club.icon,    suitColor: SUITS.club.color,    rank: 'J', title: 'AI-описание',     metric: '×8',   metricLabel: 'к выдаче',    back: 'Тексты под поисковые запросы маркетплейса.' },
   ],
 }
 
@@ -210,7 +202,7 @@ function FlipCard({
    Section
 ───────────────────────────────── */
 export default function FlipDeck() {
-  const [presetId, setPresetId] = useState<PresetId>('ecom')
+  const [presetId, setPresetId] = useState<PresetId>('clothes')
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({})
   const [autoCycle, setAutoCycle] = useState(true)
 
@@ -265,7 +257,7 @@ export default function FlipDeck() {
             className="badge mx-auto mb-5"
           >
             <Sparkles size={11} />
-            Колода AI-сценариев
+            Что умеет нейросеть
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -274,7 +266,7 @@ export default function FlipDeck() {
             transition={{ delay: 0.1 }}
             className="font-display text-4xl md:text-5xl font-black text-white tracking-tight"
           >
-            Каждая настройка — <span className="text-gradient">новый расклад</span>
+            Полный набор <span className="text-gradient">для карточки</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -283,8 +275,8 @@ export default function FlipDeck() {
             transition={{ delay: 0.18 }}
             className="text-white/45 mt-5 max-w-lg mx-auto leading-relaxed"
           >
-            Выберите индустрию — четыре карты перевернутся по очереди, как в покере, и покажут самые
-            эффективные AI-механики для вас.
+            Выберите категорию товара — четыре карты покажут, что нейросеть
+            сделает с вашей карточкой: фото, фон, инфографика и описание.
           </motion.p>
         </div>
 

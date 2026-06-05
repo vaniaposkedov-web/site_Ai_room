@@ -7,7 +7,6 @@ import StepShowcase from '@/sections/StepShowcase'
 import TryOnSimulator from '@/sections/TryOnSimulator'
 import CategoriesGrid from '@/sections/CategoriesGrid'
 import FlipDeck from '@/sections/FlipDeck'
-import AgentConfigurator from '@/sections/AgentConfigurator'
 import RoiCalculator from '@/sections/RoiCalculator'
 import Cases from '@/sections/Cases'
 import Testimonials from '@/sections/Testimonials'
@@ -18,10 +17,9 @@ import { useScrollSpy } from '@/hooks/useScrollSpy'
 const SECTION_IDS = [
   'hero',
   'marquee',
-  'solutions',
   'step-showcase',
+  'solutions',
   'try-on',
-  'configurator',
   'flip-deck',
   'categories',
   'calculator',
@@ -40,10 +38,9 @@ export default function App() {
       <main>
         <Hero />
         <Marquee />
-        <Solutions />
         <StepShowcase />
+        <Solutions />
         <TryOnSimulator />
-        <AgentConfigurator />
         <FlipDeck />
         <CategoriesGrid />
         <RoiCalculator />
