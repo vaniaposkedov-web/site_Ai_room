@@ -49,7 +49,7 @@ export default function Testimonials() {
   const next = () => setIdx(i => (i + 1) % reviews.length)
 
   return (
-    <section className="py-28 px-6 bg-[#1e1e1e]">
+    <section id="testimonials" className="py-28 px-6 bg-[#1e1e1e]">
       <div className="max-w-screen-xl mx-auto">
 
         {/* Header */}

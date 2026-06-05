@@ -9,7 +9,7 @@ export default function CTA() {
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <section className="py-28 px-6">
+    <section id="cta" className="py-28 px-6">
       <div className="max-w-screen-xl mx-auto">
         <motion.div ref={ref}
           initial={{ opacity: 0, y: 30, scale: .97 }}

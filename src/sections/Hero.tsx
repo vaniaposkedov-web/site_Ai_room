@@ -338,7 +338,7 @@ function ProductSimulator() {
 ────────────────────────────────── */
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col justify-center pt-20 pb-16 px-6 overflow-hidden">
+    <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-20 pb-16 px-6 overflow-hidden">
       {/* BG: dot grid */}
       <div className="absolute inset-0 dot-grid opacity-60 pointer-events-none" />
 
