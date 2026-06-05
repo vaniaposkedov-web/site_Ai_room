@@ -16,8 +16,8 @@ function validate(f: FormState): Errors {
   const e: Errors = {}
   if (!f.name.trim())              e.name    = 'Введите имя'
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Некорректный e-mail'
-  if (!f.company.trim())           e.company = 'Введите компанию'
-  if (f.message.trim().length < 10) e.message = 'Минимум 10 символов'
+  if (!f.company.trim())           e.company = 'Укажите контакт'
+  if (f.message.trim().length < 5) e.message = 'Минимум 5 символов'
   return e
 }
 
@@ -76,7 +76,7 @@ function Field({
           {multiline ? (
             <textarea rows={4} value={value}
               style={sharedStyle}
-              placeholder="Расскажите о вашем проекте..."
+              placeholder="Ссылка на товар или пара слов о категории..."
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               onChange={e => onChange(name, e.target.value)}
@@ -147,24 +147,24 @@ export default function ContactForm() {
             transition={{ duration: 0.6 }}
           >
             <div className="badge mb-6">
-              <Mail size={11} /> Связаться с нами
+              <Mail size={11} /> Бесплатный тест
             </div>
             <h2 className="font-display font-black text-4xl md:text-5xl text-white leading-tight mb-5">
-              Начнём ваш
+              Попробуйте на
               <br />
-              <span className="text-gradient">AI-проект</span>
+              <span className="text-gradient">своём товаре</span>
             </h2>
             <p className="text-white/45 leading-relaxed mb-8">
-              Расскажите о задаче — наш эксперт свяжется в течение двух часов
-              и подготовит персональный план внедрения.
+              Оставьте контакт и пришлите фото товара — обработаем 3 карточки
+              бесплатно и покажем результат в течение дня.
             </p>
 
             {/* Trust items */}
             <div className="space-y-4">
               {[
-                { emoji: '⚡', title: 'Ответ за 2 часа',   desc: 'В рабочее время (9:00–19:00 МСК)' },
-                { emoji: '🎯', title: 'Бесплатный аудит',  desc: 'Полный анализ текущих процессов'   },
-                { emoji: '🔒', title: 'NDA по запросу',    desc: 'Конфиденциальность гарантирована'  },
+                { emoji: '🎁', title: '3 карточки бесплатно', desc: 'Покажем результат до оплаты' },
+                { emoji: '⚡', title: 'Готово за 1 день',     desc: 'Без фотографа и студии'      },
+                { emoji: '🔒', title: 'Ваши фото в безопасности', desc: 'Не передаём третьим лицам'  },
               ].map(i => (
                 <div key={i.title} className="flex items-start gap-4">
                   <div className="w-9 h-9 rounded-xl bg-brand-yellow/10 border border-brand-yellow/20 flex items-center justify-center text-base flex-shrink-0">
@@ -198,8 +198,8 @@ export default function ContactForm() {
                   >
                     <Field icon={User}          label="Имя"        name="name"    value={form.name}    error={errors.name}    onChange={onChange} />
                     <Field icon={Mail}          label="E-mail"     name="email"   type="email" value={form.email}   error={errors.email}   onChange={onChange} />
-                    <Field icon={Building2}     label="Компания"   name="company" value={form.company} error={errors.company} onChange={onChange} />
-                    <Field icon={MessageSquare} label="Сообщение"  name="message" multiline value={form.message} error={errors.message} onChange={onChange} />
+                    <Field icon={Building2}     label="Telegram или телефон" name="company" value={form.company} error={errors.company} onChange={onChange} />
+                    <Field icon={MessageSquare} label="Что обработать?"  name="message" multiline value={form.message} error={errors.message} onChange={onChange} />
 
                     <motion.button
                       onClick={onSubmit}
@@ -221,7 +221,7 @@ export default function ContactForm() {
                       ) : (
                         <>
                           <Send size={17} strokeWidth={2.5} />
-                          Отправить заявку
+                          Получить 3 карточки бесплатно
                         </>
                       )}
                     </motion.button>
@@ -258,7 +258,7 @@ export default function ContactForm() {
                       transition={{ delay: 0.25 }}
                       className="font-display font-black text-2xl text-white mb-2"
                     >
-                      Заявка отправлена!
+                      Заявка принята!
                     </motion.h3>
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -266,8 +266,8 @@ export default function ContactForm() {
                       transition={{ delay: 0.38 }}
                       className="text-white/40 text-sm leading-relaxed max-w-[260px]"
                     >
-                      Наш эксперт свяжется с вами в течение 2 часов
-                      по адресу <span className="text-brand-yellow/80">{form.email}</span>
+                      Пришлём 3 готовые карточки в течение дня
+                      на <span className="text-brand-yellow/80">{form.email}</span>
                     </motion.p>
 
                     <motion.button

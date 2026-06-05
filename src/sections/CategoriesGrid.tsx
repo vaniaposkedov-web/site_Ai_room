@@ -65,12 +65,8 @@ function CategoryCard({ category, index }: { category: Category; index: number }
   const [hover, setHover] = useState(false)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ delay: index * 0.07, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="relative flex-shrink-0 w-[260px] sm:w-[300px] snap-start"
+    <div
+      className="relative flex-shrink-0 w-[260px] sm:w-[300px]"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -166,7 +162,7 @@ function CategoryCard({ category, index }: { category: Category; index: number }
           />
         </div>
       </motion.a>
-    </motion.div>
+    </div>
   )
 }
 
@@ -174,41 +170,52 @@ function CategoryCard({ category, index }: { category: Category; index: number }
    Section
 ───────────────────────────────── */
 export default function CategoriesGrid() {
-  const scrollerRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const offset = useRef(0)
+  const pausedRef = useRef(false)
   const headerRef = useRef(null)
   const headerInView = useInView(headerRef, { once: true, margin: '-80px' })
-  const [paused, setPaused] = useState(false)
 
-  // Endless auto-scroll — sets wrap to half (because list is duplicated)
+  // Smooth GPU transform-based marquee (right → left). scrollLeft is janky,
+  // translate3d is buttery.
   useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
+    const track = trackRef.current
+    if (!track) return
     let raf = 0
     let last = performance.now()
     const SPEED = 55 // px / sec
 
     const tick = (t: number) => {
-      const dt = (t - last) / 1000
+      const dt = Math.min((t - last) / 1000, 0.05)
       last = t
-      if (!paused) {
-        el.scrollLeft += SPEED * dt
-        const half = el.scrollWidth / 2
-        if (el.scrollLeft >= half) el.scrollLeft -= half
+      if (!pausedRef.current) offset.current += SPEED * dt
+      const half = track.scrollWidth / 2
+      if (half > 0) {
+        if (offset.current >= half) offset.current -= half
+        else if (offset.current < 0) offset.current += half
       }
+      track.style.transform = `translate3d(${-offset.current}px,0,0)`
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [paused])
+  }, [])
 
-  const scrollBy = (dx: number) => {
-    const el = scrollerRef.current
-    if (!el) return
-    setPaused(true)
-    el.scrollBy({ left: dx, behavior: 'smooth' })
-    // resume auto-scroll after the user finishes
-    window.clearTimeout((scrollBy as unknown as { _t?: number })._t)
-    ;(scrollBy as unknown as { _t?: number })._t = window.setTimeout(() => setPaused(false), 1400)
+  // Arrow nudge — smooth eased tween, then resume auto-scroll
+  const tweenBy = (dx: number) => {
+    pausedRef.current = true
+    const start = offset.current
+    const target = start + dx
+    const t0 = performance.now()
+    const dur = 500
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur)
+      const ease = 1 - Math.pow(1 - k, 3)
+      offset.current = start + (target - start) * ease
+      if (k < 1) requestAnimationFrame(step)
+      else setTimeout(() => (pausedRef.current = false), 500)
+    }
+    requestAnimationFrame(step)
   }
 
   // Duplicate the set so the loop is seamless
@@ -256,14 +263,14 @@ export default function CategoriesGrid() {
             className="flex items-center gap-2"
           >
             <button
-              onClick={() => scrollBy(-340)}
+              onClick={() => tweenBy(-340)}
               aria-label="Назад"
               className="w-11 h-11 rounded-full bg-[#1A1A1A] border border-white/10 flex items-center justify-center hover:border-[#FFE135]/40 hover:text-[#FFE135] text-white/55 transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
             <button
-              onClick={() => scrollBy(340)}
+              onClick={() => tweenBy(340)}
               aria-label="Вперёд"
               className="w-11 h-11 rounded-full bg-[#FFE135] text-[#262626] flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_24px_rgba(255,225,53,0.35)]"
             >
@@ -273,17 +280,15 @@ export default function CategoriesGrid() {
         </div>
       </div>
 
-      {/* Horizontal scroller */}
+      {/* Horizontal marquee */}
       <div
-        className="relative z-10"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={() => setPaused(true)}
-        onTouchEnd={() => setPaused(false)}
+        className="relative z-10 overflow-hidden"
+        onMouseEnter={() => (pausedRef.current = true)}
+        onMouseLeave={() => (pausedRef.current = false)}
       >
         <div
-          ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto pb-6 px-6 md:px-[max(1.5rem,calc((100vw-72rem)/2))] no-scrollbar"
+          ref={trackRef}
+          className="flex gap-5 w-max px-6 will-change-transform"
         >
           {loop.map((cat, i) => (
             <CategoryCard key={`${cat.id}-${i}`} category={cat} index={i} />
