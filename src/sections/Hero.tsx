@@ -16,14 +16,14 @@ function TypewriterHeadline() {
     if (!del && text.length < phrase.length)
       t = setTimeout(() => setText(phrase.slice(0, text.length + 1)), 60)
     else if (!del)
-      t = setTimeout(() => setDel(true), 2400)
+      t = setTimeout(() => setDel(true), 5000)
     else if (text.length > 0)
       t = setTimeout(() => setText(text.slice(0, -1)), 32)
     else { setDel(false); setIdx(i => (i + 1) % headlines.length) }
     return () => clearTimeout(t)
   }, [text, del, idx])
   return (
-    <span className="text-gradient">
+    <span className="text-gradient whitespace-nowrap">
       {text}
       <span className="inline-block w-[3px] h-[.85em] bg-brand-yellow ml-1 align-middle"
         style={{ animation: 'blink 0.9s step-end infinite' }} />
@@ -51,7 +51,7 @@ export default function Hero() {
           style={{ animation: 'spin 30s linear infinite reverse' }} />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto w-full flex flex-col items-center">
+      <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col items-center">
 
         {/* Badge */}
         <motion.div
@@ -68,7 +68,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-display font-black text-[44px] sm:text-[56px] lg:text-7xl leading-[1.05] tracking-tight text-white mb-6"
+          className="font-display font-black text-[26px] sm:text-4xl lg:text-[58px] leading-[1.08] tracking-tight text-white mb-6"
         >
           Масштабируем
           <br />
@@ -80,12 +80,11 @@ export default function Hero() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.22 }}
-          className="text-lg sm:text-xl text-white/50 leading-relaxed max-w-[600px] mb-10"
+          className="text-lg sm:text-xl text-white/50 leading-relaxed max-w-[520px] mb-10"
         >
-          <span className="text-white/90 font-semibold">Автоматизация поддержки</span>, генерация{' '}
-          <span className="text-white/90 font-semibold">студийного контента</span> и{' '}
-          <span className="text-brand-yellow font-semibold">умное ценообразование</span> — в одной
-          экосистеме для e-commerce брендов.
+          AI-агенты для <span className="text-white/90 font-semibold">поддержки</span>,{' '}
+          <span className="text-white/90 font-semibold">контента</span> и{' '}
+          <span className="text-brand-yellow font-semibold">цен</span> — больше продаж без роста команды.
         </motion.p>
 
         {/* CTA */}
