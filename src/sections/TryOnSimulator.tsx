@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence, useInView, type PanInfo } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Wand2, Sparkles, Check, X, RotateCcw } from 'lucide-react'
 
 /* ─────────────────────────────────
@@ -107,14 +107,17 @@ function WardrobeCard({
   item: Item
   connected: boolean
   cardRef: (el: HTMLDivElement | null) => void
-  onDragMove: (info: PanInfo) => void
-  onDrop: (info: PanInfo) => void
+  onDragMove: (rect: DOMRect) => void
+  onDrop: (rect: DOMRect) => void
   onDisconnect: () => void
 }) {
   const [dragging, setDragging] = useState(false)
+  const innerRef = useRef<HTMLDivElement>(null)
+
   return (
     <div ref={cardRef} className="w-[86px] sm:w-[112px]">
       <motion.div
+        ref={innerRef}
         drag
         dragSnapToOrigin
         dragElastic={0.14}
@@ -122,10 +125,14 @@ function WardrobeCard({
         whileHover={{ scale: 1.05 }}
         whileDrag={{ scale: 1.1, zIndex: 60 }}
         onDragStart={() => setDragging(true)}
-        onDrag={(_e, info: PanInfo) => onDragMove(info)}
-        onDragEnd={(_e, info: PanInfo) => {
+        onDrag={() => {
+          const r = innerRef.current?.getBoundingClientRect()
+          if (r) onDragMove(r)
+        }}
+        onDragEnd={() => {
           setDragging(false)
-          onDrop(info)
+          const r = innerRef.current?.getBoundingClientRect()
+          if (r) onDrop(r)
         }}
         onClick={() => connected && onDisconnect()}
         className="relative cursor-grab active:cursor-grabbing select-none rounded-2xl border bg-[#1A1A1A] p-1.5 sm:p-2 flex flex-col gap-1"
@@ -176,23 +183,24 @@ export default function TryOnSimulator() {
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, margin: '-100px' })
 
-  const isOverDrop = (info: PanInfo) => {
-    const r = dropRef.current?.getBoundingClientRect()
-    if (!r) return false
-    const pad = 50
+  // надёжно: пересекается ли прямоугольник перетаскиваемой карточки с фото
+  const overlapsDrop = (card: DOMRect) => {
+    const b = dropRef.current?.getBoundingClientRect()
+    if (!b) return false
+    const pad = 16 // небольшой запас
     return (
-      info.point.x >= r.left - pad &&
-      info.point.x <= r.right + pad &&
-      info.point.y >= r.top - pad &&
-      info.point.y <= r.bottom + pad
+      card.left < b.right + pad &&
+      card.right > b.left - pad &&
+      card.top < b.bottom + pad &&
+      card.bottom > b.top - pad
     )
   }
 
-  const handleDragMove = (info: PanInfo) => setDragOver(isOverDrop(info))
+  const handleDragMove = (rect: DOMRect) => setDragOver(overlapsDrop(rect))
 
-  const handleDrop = (id: string) => (info: PanInfo) => {
+  const handleDrop = (id: string) => (rect: DOMRect) => {
     setDragOver(false)
-    if (!isOverDrop(info)) return
+    if (!overlapsDrop(rect)) return
     setConnected((arr) => (arr.includes(id) ? arr : [...arr, id]))
     setLastApplied(id)
     setPulse(true)

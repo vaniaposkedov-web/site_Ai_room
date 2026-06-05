@@ -43,7 +43,7 @@ const IMPROVEMENTS = [
 /* ─────────────────────────────────
    Before / After drag slider
 ───────────────────────────────── */
-function BeforeAfter({ example, intro }: { example: Example; intro?: boolean }) {
+function BeforeAfter({ example, intro, onInteract }: { example: Example; intro?: boolean; onInteract?: () => void }) {
   const [pos, setPos] = useState(50)
   const trackRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
@@ -52,6 +52,7 @@ function BeforeAfter({ example, intro }: { example: Example; intro?: boolean }) 
   const applyPos = (clientX: number) => {
     if (!trackRef.current) return
     userTouched.current = true
+    onInteract?.()
     const { left, width } = trackRef.current.getBoundingClientRect()
     setPos(Math.min(100, Math.max(0, ((clientX - left) / width) * 100)))
   }
@@ -133,10 +134,6 @@ function BeforeAfter({ example, intro }: { example: Example; intro?: boolean }) 
           <path d="M5 4l-3 4 3 4M11 4l3 4-3 4" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/45 backdrop-blur-md text-white/60 text-[10px] px-3 py-1 rounded-full pointer-events-none">
-        Перетащите ползунок
-      </div>
     </div>
   )
 }
@@ -153,33 +150,47 @@ const slideVariants = {
 export default function Solutions() {
   const [index, setIndex] = useState(0)
   const [dir, setDir] = useState(1)
-  const [restartKey, setRestartKey] = useState(0)
-  const [introDone, setIntroDone] = useState(false)
+  const [autoOn, setAutoOn] = useState(false)
+  const [firstView, setFirstView] = useState(true)
   const example = EXAMPLES[index]
 
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { amount: 0.3 })
+  const idleRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // Сначала отыгрывает интро ползунка, потом включается смена фото
-  useEffect(() => {
-    if (!inView || introDone) return
-    const t = setTimeout(() => setIntroDone(true), 2200)
-    return () => clearTimeout(t)
-  }, [inView, introDone])
+  // Любое взаимодействие с ползунком/переключателем останавливает авто-смену
+  // и заново заводит 7-секундный таймер простоя.
+  const armIdle = () => {
+    setAutoOn(false)
+    setFirstView(false)
+    if (idleRef.current) clearTimeout(idleRef.current)
+    idleRef.current = setTimeout(() => setAutoOn(true), 7000)
+  }
 
+  // При попадании секции в зону видимости заводим таймер простоя (7 сек)
   useEffect(() => {
-    if (!inView || !introDone) return
+    if (!inView) return
+    if (idleRef.current) clearTimeout(idleRef.current)
+    idleRef.current = setTimeout(() => setAutoOn(true), 7000)
+    return () => {
+      if (idleRef.current) clearTimeout(idleRef.current)
+    }
+  }, [inView])
+
+  // Авто-смена фото — только когда включена и секция видна
+  useEffect(() => {
+    if (!inView || !autoOn) return
     const id = setInterval(() => {
       setDir(1)
       setIndex((i) => (i + 1) % EXAMPLES.length)
     }, 5200)
     return () => clearInterval(id)
-  }, [inView, introDone, restartKey])
+  }, [inView, autoOn])
 
   const pick = (i: number) => {
     setDir(i > index ? 1 : -1)
     setIndex(i)
-    setRestartKey((k) => k + 1)
+    armIdle()
   }
 
   return (
@@ -223,7 +234,7 @@ export default function Solutions() {
                 transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0"
               >
-                <BeforeAfter example={example} intro={index === 0 && !introDone} />
+                <BeforeAfter example={example} intro={index === 0 && firstView} onInteract={armIdle} />
               </motion.div>
             </AnimatePresence>
           </div>
