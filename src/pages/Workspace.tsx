@@ -6,6 +6,8 @@ import { ArrowLeft, Star, Plus, Sparkles, Loader2, X } from 'lucide-react'
 import NodeLibrary from '@/workspace/NodeLibrary'
 import Editor from '@/workspace/Editor'
 import Inspector from '@/workspace/Inspector'
+import Toolbar from '@/workspace/Toolbar'
+import BottomDrawer from '@/workspace/BottomDrawer'
 import { useFlow } from '@/workspace/store'
 import { STAR_TO_RUB } from '@/workspace/types'
 
@@ -46,6 +48,8 @@ export default function Workspace() {
   const running = useFlow((s) => s.running)
   const run = useFlow((s) => s.run)
   const cost = useFlow((s) => s.graphCost())
+  const fileCount = useFlow((s) => s.files.length)
+  const price = cost * Math.max(1, fileCount)
   const dispBalance = useCountUp(balance)
 
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function Workspace() {
     return () => clearTimeout(t)
   }, [])
 
-  const canRun = !running && cost > 0 && balance >= cost
+  const canRun = !running && cost > 0 && balance >= price
 
   return (
     <div className="h-screen flex flex-col bg-brand-dark text-white overflow-hidden">
@@ -121,19 +125,23 @@ export default function Workspace() {
             {running ? 'Генерация…' : (
               <span className="flex items-center gap-1">
                 Сгенерировать
-                <span className="opacity-70 flex items-center gap-0.5">(от {cost} <Star size={11} fill="currentColor" />)</span>
+                <span className="opacity-70 flex items-center gap-0.5">(от {price} <Star size={11} fill="currentColor" />)</span>
               </span>
             )}
           </button>
         </div>
       </header>
 
-      {/* Body: library · canvas · inspector */}
+      {/* Body: library · (toolbar + canvas + batch) · inspector */}
       <div className="flex-1 flex min-h-0">
         <NodeLibrary />
-        <ReactFlowProvider>
-          <Editor />
-        </ReactFlowProvider>
+        <div className="flex-1 flex flex-col min-w-0">
+          <Toolbar />
+          <ReactFlowProvider>
+            <Editor />
+          </ReactFlowProvider>
+          <BottomDrawer />
+        </div>
         <Inspector />
       </div>
 

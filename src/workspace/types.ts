@@ -34,17 +34,26 @@ export interface Port {
 export interface ParamDef {
   key: string
   label: string
-  kind: 'text' | 'select'
+  kind: 'text' | 'select' | 'slider'
   options?: string[]
   placeholder?: string
+  min?: number
+  max?: number
+  step?: number
+  unit?: string
 }
+
+/* категории-группы для аккордеона левой панели */
+export const CATEGORY_ORDER = ['Источники', 'Обработка', 'Нейросети', 'Дизайн', 'Финал'] as const
+export type Category = (typeof CATEGORY_ORDER)[number]
 
 export interface NodeDef {
   type: string
   label: string
   cost: number
   icon: LucideIcon
-  category: string
+  category: Category
+  tags: string[]
   description: string
   inputs: Port[]
   outputs: Port[]
@@ -60,10 +69,23 @@ export const NODE_DEFS: Record<string, NodeDef> = {
     label: 'Загрузка фото',
     cost: 0,
     icon: Upload,
-    category: 'Источник',
+    category: 'Источники',
+    tags: ['фото', 'импорт', 'source', 'загрузка'],
     description: 'Исходное фото товара. Точка входа для всей цепочки.',
     inputs: [],
     outputs: [{ id: 'image', type: 'image', label: 'Картинка' }],
+  },
+  text: {
+    type: 'text',
+    label: 'Текст / Описание',
+    cost: 0,
+    icon: Type,
+    category: 'Источники',
+    tags: ['текст', 'описание', 'промпт', 'seo'],
+    description: 'Текстовый блок — отрабатывает на клиенте, бесплатно.',
+    inputs: [],
+    outputs: [{ id: 'text', type: 'text', label: 'Текст' }],
+    params: [{ key: 'content', label: 'Содержимое', kind: 'text', placeholder: 'Преимущества товара…' }],
   },
   removebg: {
     type: 'removebg',
@@ -71,6 +93,7 @@ export const NODE_DEFS: Record<string, NodeDef> = {
     cost: 1,
     icon: Eraser,
     category: 'Обработка',
+    tags: ['фон', 'вырезать', 'маска', 'background'],
     description: 'Отделяет товар от фона и возвращает картинку + маску.',
     inputs: [{ id: 'image', type: 'image', label: 'Картинка', required: true }],
     outputs: [
@@ -78,12 +101,25 @@ export const NODE_DEFS: Record<string, NodeDef> = {
       { id: 'mask', type: 'mask', label: 'Маска' },
     ],
   },
+  upscale: {
+    type: 'upscale',
+    label: 'Апскейл 4K',
+    cost: 2,
+    icon: Maximize2,
+    category: 'Обработка',
+    tags: ['разрешение', '4k', 'upscale', 'детализация'],
+    description: 'Повышает разрешение и детализацию до 4K.',
+    inputs: [{ id: 'image', type: 'image', label: 'Картинка', required: true }],
+    outputs: [{ id: 'image', type: 'image', label: 'Картинка' }],
+    params: [{ key: 'factor', label: 'Множитель', kind: 'select', options: ['×2', '×4'] }],
+  },
   genbg: {
     type: 'genbg',
     label: 'Генерация фона (SD)',
     cost: 3,
     icon: Wand2,
-    category: 'Нейросеть',
+    category: 'Нейросети',
+    tags: ['stable diffusion', 'фон', 'генерация', 'сцена', 'ai'],
     description: 'Stable Diffusion подставляет новый студийный/lifestyle фон.',
     inputs: [
       { id: 'image', type: 'image', label: 'Картинка', required: true },
@@ -93,59 +129,43 @@ export const NODE_DEFS: Record<string, NodeDef> = {
     params: [
       { key: 'prompt', label: 'Сцена', kind: 'text', placeholder: 'студия, мягкий свет…' },
       { key: 'style', label: 'Стиль', kind: 'select', options: ['Студия', 'Интерьер', 'Lifestyle', 'Минимализм'] },
+      { key: 'strength', label: 'Сила фона', kind: 'slider', min: 0, max: 100, step: 5, unit: '%' },
     ],
-  },
-  upscale: {
-    type: 'upscale',
-    label: 'Апскейл 4K',
-    cost: 2,
-    icon: Maximize2,
-    category: 'Обработка',
-    description: 'Повышает разрешение и детализацию до 4K.',
-    inputs: [{ id: 'image', type: 'image', label: 'Картинка', required: true }],
-    outputs: [{ id: 'image', type: 'image', label: 'Картинка' }],
-    params: [{ key: 'factor', label: 'Множитель', kind: 'select', options: ['×2', '×4'] }],
   },
   retouch: {
     type: 'retouch',
     label: 'Ретушь',
     cost: 2,
     icon: Brush,
-    category: 'Нейросеть',
+    category: 'Нейросети',
+    tags: ['ретушь', 'свет', 'цвет', 'дефекты', 'ai'],
     description: 'Убирает дефекты, выравнивает свет и цвет.',
     inputs: [{ id: 'image', type: 'image', label: 'Картинка', required: true }],
     outputs: [{ id: 'image', type: 'image', label: 'Картинка' }],
+    params: [{ key: 'intensity', label: 'Интенсивность', kind: 'slider', min: 0, max: 100, step: 10, unit: '%' }],
   },
   infographic: {
     type: 'infographic',
     label: 'Инфографика',
     cost: 1,
     icon: LayoutGrid,
-    category: 'Обработка',
+    category: 'Дизайн',
+    tags: ['инфографика', 'характеристики', 'текст на фото', 'дизайн'],
     description: 'Выносит преимущества и характеристики прямо на фото.',
     inputs: [
       { id: 'image', type: 'image', label: 'Картинка', required: true },
       { id: 'text', type: 'text', label: 'Текст' },
     ],
     outputs: [{ id: 'image', type: 'image', label: 'Картинка' }],
-  },
-  text: {
-    type: 'text',
-    label: 'Текст / Описание',
-    cost: 0,
-    icon: Type,
-    category: 'Клиент',
-    description: 'Текстовый блок — отрабатывает на клиенте, бесплатно.',
-    inputs: [],
-    outputs: [{ id: 'text', type: 'text', label: 'Текст' }],
-    params: [{ key: 'content', label: 'Содержимое', kind: 'text', placeholder: 'Преимущества товара…' }],
+    params: [{ key: 'template', label: 'Шаблон', kind: 'select', options: ['Минимал', 'Иконки', 'Плашки'] }],
   },
   output: {
     type: 'output',
     label: 'Готовая карточка',
     cost: 0,
     icon: ImageIcon,
-    category: 'Результат',
+    category: 'Финал',
+    tags: ['результат', 'экспорт', 'карточка', 'output'],
     description: 'Финальный результат пайплайна — карточка для маркетплейса.',
     inputs: [{ id: 'image', type: 'image', label: 'Картинка', required: true }],
     outputs: [],

@@ -25,6 +25,7 @@ export default function Editor() {
   const isValidConnection = useFlow((s) => s.isValidConnection)
   const addNode = useFlow((s) => s.addNode)
   const setSelected = useFlow((s) => s.setSelected)
+  const snapshot = useFlow((s) => s.snapshot)
   const { screenToFlowPosition } = useReactFlow()
 
   const onDrop = useCallback(
@@ -59,7 +60,9 @@ export default function Editor() {
         onConnect={onConnect}
         isValidConnection={isValidConnection}
         onNodeClick={onNodeClick}
+        onNodeDragStart={() => snapshot()}
         onPaneClick={() => setSelected(null)}
+        deleteKeyCode={null}
         defaultEdgeOptions={{ type: 'flow' }}
         connectionRadius={42}
         colorMode="dark"

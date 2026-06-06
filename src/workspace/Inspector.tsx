@@ -7,6 +7,7 @@ export default function Inspector() {
   const node = useFlow((s) => s.nodes.find((n) => n.id === s.selectedId))
   const setParam = useFlow((s) => s.setParam)
   const removeSelected = useFlow((s) => s.removeSelected)
+  const previewUrl = useFlow((s) => s.files[0]?.url)
 
   if (!node) {
     return (
@@ -67,6 +68,21 @@ export default function Inspector() {
                 >
                   {p.options?.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
+              ) : p.kind === 'slider' ? (
+                <div>
+                  <input
+                    type="range"
+                    min={p.min ?? 0}
+                    max={p.max ?? 100}
+                    step={p.step ?? 1}
+                    value={node.data.params[p.key] ?? String(p.min ?? 0)}
+                    onChange={(e) => setParam(node.id, p.key, e.target.value)}
+                    className="w-full accent-[#FFE135] cursor-pointer"
+                  />
+                  <div className="text-[11px] text-brand-yellow text-right font-semibold">
+                    {node.data.params[p.key] ?? String(p.min ?? 0)}{p.unit ?? ''}
+                  </div>
+                </div>
               ) : (
                 <input
                   value={node.data.params[p.key] ?? ''}
@@ -98,6 +114,23 @@ export default function Inspector() {
           ))}
         </div>
       </div>
+
+      {/* mini-preview — после успешного завершения шага */}
+      {node.data.status === 'done' && (
+        <div className="px-5 py-4 border-b border-white/[0.07]">
+          <div className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Предпросмотр результата</div>
+          <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#141414] border border-white/[0.08]">
+            {previewUrl ? (
+              <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a1233, #2d1b69 55%, #0f172a)' }} />
+            )}
+            <div className="absolute top-2 left-2 flex items-center gap-1 bg-[#FFE135] text-[#262626] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded">
+              <Star size={9} fill="currentColor" /> {def.label}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="p-5">
         <button
