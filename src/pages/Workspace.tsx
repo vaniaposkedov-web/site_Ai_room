@@ -1,34 +1,63 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UploadCloud, ImagePlus, Eraser, Sun, LayoutGrid, FileText, ArrowLeft, Sparkles } from 'lucide-react'
-import { useModal } from '@/components/ModalProvider'
+import { ReactFlowProvider } from '@xyflow/react'
+import { ArrowLeft, Star, Plus, Sparkles, Loader2, X } from 'lucide-react'
+import NodeLibrary from '@/workspace/NodeLibrary'
+import Editor from '@/workspace/Editor'
+import Inspector from '@/workspace/Inspector'
+import { useFlow } from '@/workspace/store'
+import { STAR_TO_RUB } from '@/workspace/types'
 
-const TOOLS = [
-  { icon: Eraser, label: 'Чистый фон' },
-  { icon: Sun, label: 'Свет и цвет' },
-  { icon: LayoutGrid, label: 'Инфографика' },
-  { icon: FileText, label: 'Описание' },
+/* плавный «барабан» баланса */
+function useCountUp(value: number, dur = 600) {
+  const [disp, setDisp] = useState(value)
+  const fromRef = useRef(value)
+  useEffect(() => {
+    const from = fromRef.current
+    const to = value
+    if (from === to) return
+    const t0 = performance.now()
+    let raf = 0
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur)
+      const v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))
+      setDisp(v)
+      if (k < 1) raf = requestAnimationFrame(tick)
+      else fromRef.current = to
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, dur])
+  return disp
+}
+
+const PACKS = [
+  { stars: 50, bonus: 0 },
+  { stars: 100, bonus: 10 },
+  { stars: 300, bonus: 50 },
 ]
 
 export default function Workspace() {
-  const { openLogin } = useModal()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState(false)
   const [booting, setBooting] = useState(true)
+  const [topup, setTopup] = useState(false)
+
+  const balance = useFlow((s) => s.balance)
+  const running = useFlow((s) => s.running)
+  const run = useFlow((s) => s.run)
+  const cost = useFlow((s) => s.graphCost())
+  const dispBalance = useCountUp(balance)
 
   useEffect(() => {
     const t = setTimeout(() => setBooting(false), 1700)
     return () => clearTimeout(t)
   }, [])
 
-  const pick = () => fileRef.current?.click()
-  const onFile = (f?: File | null) => f && setFileName(f.name)
+  const canRun = !running && cost > 0 && balance >= cost
 
   return (
-    <div className="min-h-screen bg-brand-dark text-white flex flex-col">
-      {/* Boot / loading screen */}
+    <div className="h-screen flex flex-col bg-brand-dark text-white overflow-hidden">
+      {/* Boot screen */}
       <AnimatePresence>
         {booting && (
           <motion.div
@@ -45,122 +74,111 @@ export default function Workspace() {
               AI<span className="text-brand-yellow">ROOM</span>
             </motion.div>
             <div className="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                className="h-full bg-brand-yellow"
-                initial={{ x: '-100%' }}
-                animate={{ x: '0%' }}
-                transition={{ duration: 1.5, ease: 'easeInOut' }}
-              />
+              <motion.div className="h-full bg-brand-yellow" initial={{ x: '-100%' }} animate={{ x: '0%' }} transition={{ duration: 1.5, ease: 'easeInOut' }} />
             </div>
             <div className="text-white/40 text-xs tracking-wide">Загружаем рабочую область…</div>
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-[#1A1A1A]/80 backdrop-blur-md border-b border-white/[0.07]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="font-display font-black text-xl tracking-tight text-white">
-            AI<span className="text-brand-yellow">ROOM</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 text-sm text-white/55 hover:text-white px-3 py-2 rounded-lg transition-colors"
+
+      {/* Header */}
+      <header className="h-16 flex-shrink-0 flex items-center gap-4 px-4 border-b border-white/[0.07] bg-[#1A1A1A]/80 backdrop-blur-md z-20">
+        <Link to="/" className="font-display font-black text-xl tracking-tight">
+          AI<span className="text-brand-yellow">ROOM</span>
+        </Link>
+        <Link to="/" className="flex items-center gap-1.5 text-sm text-white/45 hover:text-white px-2 py-1.5 rounded-lg transition-colors">
+          <ArrowLeft size={15} /> <span className="hidden sm:inline">На сайт</span>
+        </Link>
+
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          {/* balance */}
+          <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl pl-3 pr-1.5 py-1.5">
+            <span className="text-xs text-white/40 hidden sm:inline">Баланс</span>
+            <motion.span
+              key={balance}
+              initial={{ scale: 1.25, color: '#FFFFFF' }}
+              animate={{ scale: 1, color: '#FFE135' }}
+              transition={{ duration: 0.4 }}
+              className="flex items-center gap-1 font-display font-black tabular-nums"
             >
-              <ArrowLeft size={15} /> На сайт
-            </Link>
+              {dispBalance} <Star size={13} fill="currentColor" />
+            </motion.span>
             <button
-              onClick={openLogin}
-              className="font-display font-bold text-sm px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark"
+              onClick={() => setTopup(true)}
+              className="flex items-center gap-1 text-xs font-semibold bg-brand-yellow/15 text-brand-yellow border border-brand-yellow/25 rounded-lg px-2 py-1 hover:bg-brand-yellow/25 transition-colors"
             >
-              Войти
+              <Plus size={12} /> <span className="hidden sm:inline">Пополнить</span>
             </button>
           </div>
+
+          {/* generate */}
+          <button
+            onClick={() => run()}
+            disabled={!canRun}
+            className="flex items-center gap-2 font-display font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {running ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.5} />}
+            {running ? 'Генерация…' : (
+              <span className="flex items-center gap-1">
+                Сгенерировать
+                <span className="opacity-70 flex items-center gap-0.5">(от {cost} <Star size={11} fill="currentColor" />)</span>
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
-      {/* Body */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-12">
-        <div className="badge mb-5">
-          <Sparkles size={11} /> Рабочая область · beta
-        </div>
-        <h1 className="font-display font-black text-3xl md:text-4xl tracking-tight mb-2">
-          Загрузите фото товара
-        </h1>
-        <p className="text-white/45 mb-8 max-w-xl">
-          Нейросеть очистит фон, выровняет свет, добавит инфографику и описание —
-          и соберёт готовую карточку для маркетплейса.
-        </p>
+      {/* Body: library · canvas · inspector */}
+      <div className="flex-1 flex min-h-0">
+        <NodeLibrary />
+        <ReactFlowProvider>
+          <Editor />
+        </ReactFlowProvider>
+        <Inspector />
+      </div>
 
-        {/* Dropzone */}
-        <div
-          onClick={pick}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); onFile(e.dataTransfer.files?.[0]) }}
-          className="relative cursor-pointer rounded-3xl border-2 border-dashed transition-colors flex flex-col items-center justify-center text-center py-16 px-6"
-          style={{
-            borderColor: dragOver ? 'rgba(255,225,53,0.7)' : 'rgba(255,255,255,0.12)',
-            background: dragOver ? 'rgba(255,225,53,0.05)' : 'rgba(255,255,255,0.015)',
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => onFile(e.target.files?.[0])}
-          />
+      {/* Top-up modal */}
+      <AnimatePresence>
+        {topup && (
           <motion.div
-            animate={{ y: dragOver ? -4 : 0 }}
-            className="w-16 h-16 rounded-2xl bg-brand-yellow/15 border border-brand-yellow/30 flex items-center justify-center mb-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           >
-            <UploadCloud size={28} className="text-brand-yellow" />
-          </motion.div>
-          {fileName ? (
-            <div className="flex items-center gap-2 text-white">
-              <ImagePlus size={16} className="text-brand-yellow" />
-              <span className="font-semibold">{fileName}</span>
-            </div>
-          ) : (
-            <>
-              <div className="font-display font-bold text-white text-lg">Перетащите фото сюда</div>
-              <div className="text-white/40 text-sm mt-1">или нажмите, чтобы выбрать файл · JPG, PNG до 25 МБ</div>
-            </>
-          )}
-        </div>
-
-        {/* Action */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-6">
-          <button
-            disabled={!fileName}
-            className="font-display font-bold px-7 py-3.5 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Sparkles size={17} /> Обработать карточку
-          </button>
-          {fileName && (
-            <button onClick={() => setFileName(null)} className="text-sm text-white/40 hover:text-white/70 transition-colors">
-              Очистить
-            </button>
-          )}
-          <span className="text-white/25 text-xs sm:ml-auto">Первая карточка — для теста</span>
-        </div>
-
-        {/* What happens */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10">
-          {TOOLS.map((t) => {
-            const Icon = t.icon
-            return (
-              <div key={t.label} className="glass-card p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-brand-yellow/15 border border-brand-yellow/30 flex items-center justify-center flex-shrink-0">
-                  <Icon size={16} className="text-brand-yellow" />
-                </div>
-                <span className="text-sm font-semibold text-white/80">{t.label}</span>
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setTopup(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#1A1A1A] p-7 shadow-2xl"
+            >
+              <button onClick={() => setTopup(false)} className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06]">
+                <X size={17} />
+              </button>
+              <h3 className="font-display font-black text-2xl text-white mb-1">Пополнить баланс</h3>
+              <p className="text-white/40 text-sm mb-5">1 ⭐ = {STAR_TO_RUB} ₽. Списываются только за платные блоки.</p>
+              <div className="space-y-2.5">
+                {PACKS.map((p) => {
+                  const total = p.stars + p.bonus
+                  return (
+                    <button
+                      key={p.stars}
+                      onClick={() => { useFlow.setState((s) => ({ balance: s.balance + total })); setTopup(false) }}
+                      className="w-full flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 hover:border-brand-yellow/40 transition-colors"
+                    >
+                      <span className="flex items-center gap-2 font-display font-bold text-white">
+                        {total} <Star size={14} className="text-brand-yellow" fill="#FFE135" />
+                        {p.bonus > 0 && <span className="text-[11px] text-[#4ADE80]">+{p.bonus} бонус</span>}
+                      </span>
+                      <span className="text-sm text-white/50">{p.stars * STAR_TO_RUB} ₽</span>
+                    </button>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
-      </main>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
