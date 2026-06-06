@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { UploadCloud, ImagePlus, Eraser, Sun, LayoutGrid, FileText, ArrowLeft, Sparkles } from 'lucide-react'
 import { useModal } from '@/components/ModalProvider'
 
@@ -16,12 +16,46 @@ export default function Workspace() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [booting, setBooting] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setBooting(false), 1700)
+    return () => clearTimeout(t)
+  }, [])
 
   const pick = () => fileRef.current?.click()
   const onFile = (f?: File | null) => f && setFileName(f.name)
 
   return (
     <div className="min-h-screen bg-brand-dark text-white flex flex-col">
+      {/* Boot / loading screen */}
+      <AnimatePresence>
+        {booting && (
+          <motion.div
+            key="boot"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[200] bg-brand-dark flex flex-col items-center justify-center gap-6"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="font-display font-black text-3xl tracking-tight"
+            >
+              AI<span className="text-brand-yellow">ROOM</span>
+            </motion.div>
+            <div className="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full bg-brand-yellow"
+                initial={{ x: '-100%' }}
+                animate={{ x: '0%' }}
+                transition={{ duration: 1.5, ease: 'easeInOut' }}
+              />
+            </div>
+            <div className="text-white/40 text-xs tracking-wide">Загружаем рабочую область…</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-[#1A1A1A]/80 backdrop-blur-md border-b border-white/[0.07]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">

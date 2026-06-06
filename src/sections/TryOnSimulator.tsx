@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { Wand2, Sparkles, Check, X, RotateCcw } from 'lucide-react'
+import { Wand2, Sparkles, Check, X, RotateCcw, ArrowRight } from 'lucide-react'
 
 /* ─────────────────────────────────
    Data — wardrobe items
@@ -164,6 +165,7 @@ function WardrobeCard({
 interface Line { id: string; x1: number; y1: number; x2: number; y2: number; len: number }
 
 export default function TryOnSimulator() {
+  const navigate = useNavigate()
   const [connected, setConnected] = useState<string[]>([])
   const [lastApplied, setLastApplied] = useState<string | null>(null)
   const [pulse, setPulse] = useState(false)
@@ -328,11 +330,19 @@ export default function TryOnSimulator() {
                 {/* main line draws itself in */}
                 <motion.line
                   x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-                  stroke="#FFE135" strokeWidth={2} strokeLinecap="round"
+                  stroke="#FFE135" strokeWidth={2} strokeLinecap="round" opacity={0.45}
                   strokeDasharray={l.len}
                   initial={{ strokeDashoffset: l.len }}
                   animate={{ strokeDashoffset: 0 }}
                   transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                />
+                {/* flowing pulses toward the photo */}
+                <motion.line
+                  x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+                  stroke="#FFF6C2" strokeWidth={2.5} strokeLinecap="round"
+                  strokeDasharray="2 14"
+                  animate={{ strokeDashoffset: [0, -32] }}
+                  transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
                 />
                 {/* port plugging into the photo border */}
                 <motion.circle
@@ -353,6 +363,19 @@ export default function TryOnSimulator() {
 
           {/* CENTER photo (drop target) */}
           <div className="relative z-10 flex justify-center">
+            <div className="relative">
+              {/* rotating glow halo */}
+              <motion.div
+                aria-hidden
+                className="absolute -inset-5 rounded-[2rem] pointer-events-none"
+                style={{
+                  background:
+                    'conic-gradient(from 0deg, rgba(255,225,53,0), rgba(255,225,53,0.45), rgba(255,225,53,0), rgba(255,225,53,0.25), rgba(255,225,53,0))',
+                  filter: 'blur(22px)',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+              />
             <motion.div
               ref={dropRef}
               animate={{
@@ -366,6 +389,16 @@ export default function TryOnSimulator() {
             >
               <MorphImage src={centralImg} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10 pointer-events-none z-10" />
+
+              {/* viewfinder corners */}
+              {[
+                'top-3 left-3 border-t-2 border-l-2 rounded-tl-lg',
+                'top-3 right-3 border-t-2 border-r-2 rounded-tr-lg',
+                'bottom-3 left-3 border-b-2 border-l-2 rounded-bl-lg',
+                'bottom-3 right-3 border-b-2 border-r-2 rounded-br-lg',
+              ].map((c) => (
+                <div key={c} className={`absolute w-5 h-5 border-[#FFE135]/70 pointer-events-none z-10 ${c}`} />
+              ))}
 
               {/* drop hint ring while dragging over */}
               <AnimatePresence>
@@ -395,6 +428,7 @@ export default function TryOnSimulator() {
                 </div>
               </div>
             </motion.div>
+            </div>
           </div>
 
           {/* RIGHT cards */}
@@ -432,6 +466,17 @@ export default function TryOnSimulator() {
               <RotateCcw size={13} /> Сбросить образ
             </button>
           )}
+
+          {/* CTA → рабочая область */}
+          <motion.button
+            onClick={() => navigate('/app')}
+            whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(255,225,53,0.35)' }}
+            whileTap={{ scale: 0.97 }}
+            className="mt-2 font-display font-bold text-base px-8 py-4 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2.5 transition-shadow"
+          >
+            Попробовать
+            <ArrowRight size={18} />
+          </motion.button>
         </div>
       </div>
     </section>

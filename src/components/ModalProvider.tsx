@@ -5,15 +5,16 @@ import { X, User, Mail, Phone, MessageSquare, CheckCircle, ArrowRight, Lock } fr
 /* ─────────────────────────────────
    Modal context
 ───────────────────────────────── */
-type ModalType = 'login' | 'lead' | null
+type ModalType = 'login' | 'register' | 'lead' | null
 
 interface ModalApi {
   openLogin: () => void
+  openRegister: () => void
   openLead: (plan?: string) => void
   close: () => void
 }
 
-const Ctx = createContext<ModalApi>({ openLogin: () => {}, openLead: () => {}, close: () => {} })
+const Ctx = createContext<ModalApi>({ openLogin: () => {}, openRegister: () => {}, openLead: () => {}, close: () => {} })
 export const useModal = () => useContext(Ctx)
 
 /* ─────────────────────────────────
@@ -143,7 +144,40 @@ function AuthForm({ onClose }: { onClose: () => void }) {
         Войти <ArrowRight size={17} />
       </button>
       <p className="text-center text-[11px] text-white/30 mt-4">
-        Нет аккаунта? Оставьте заявку — мы откроем доступ.
+        Нет аккаунта? Нажмите «Начать проект», чтобы зарегистрироваться.
+      </p>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────
+   Register form
+───────────────────────────────── */
+function RegisterForm({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [pass, setPass] = useState('')
+  const [done, setDone] = useState(false)
+
+  if (done) return <SuccessView title="Аккаунт создан!" text="Мы отправили подтверждение на вашу почту. Добро пожаловать в AI ROOM." onClose={onClose} />
+
+  return (
+    <div>
+      <h3 className="font-display font-black text-2xl text-white mb-1">Регистрация</h3>
+      <p className="text-white/40 text-sm mb-6">Создайте аккаунт, чтобы начать делать карточки.</p>
+      <div className="space-y-3">
+        <Input icon={User} label="Имя" value={name} onChange={setName} />
+        <Input icon={Mail} label="E-mail" type="email" value={email} onChange={setEmail} />
+        <Input icon={Lock} label="Пароль" type="password" value={pass} onChange={setPass} />
+      </div>
+      <button
+        onClick={() => setDone(true)}
+        className="mt-5 w-full py-3.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold flex items-center justify-center gap-2"
+      >
+        Создать аккаунт <ArrowRight size={17} />
+      </button>
+      <p className="text-center text-[11px] text-white/30 mt-4">
+        Регистрируясь, вы соглашаетесь с политикой конфиденциальности
       </p>
     </div>
   )
@@ -194,16 +228,19 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<string | undefined>(undefined)
 
   const openLogin = () => { setPlan(undefined); setType('login') }
+  const openRegister = () => { setPlan(undefined); setType('register') }
   const openLead = (p?: string) => { setPlan(p); setType('lead') }
   const close = () => setType(null)
 
   return (
-    <Ctx.Provider value={{ openLogin, openLead, close }}>
+    <Ctx.Provider value={{ openLogin, openRegister, openLead, close }}>
       {children}
       <AnimatePresence>
         {type && (
           <ModalShell onClose={close}>
-            {type === 'login' ? <AuthForm onClose={close} /> : <LeadForm plan={plan} onClose={close} />}
+            {type === 'login' && <AuthForm onClose={close} />}
+            {type === 'register' && <RegisterForm onClose={close} />}
+            {type === 'lead' && <LeadForm plan={plan} onClose={close} />}
           </ModalShell>
         )}
       </AnimatePresence>

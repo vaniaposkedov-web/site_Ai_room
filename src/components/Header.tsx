@@ -16,7 +16,7 @@ export default function Header() {
   const [active,    setActive]    = useState('')
   const [mobileOpen,setMobileOpen]= useState(false)
   const [hovering,  setHovering]  = useState<string | null>(null)
-  const { openLogin, openLead } = useModal()
+  const { openLogin, openRegister } = useModal()
 
   useEffect(() => {
     const onScroll = () => {
@@ -112,7 +112,7 @@ export default function Header() {
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               />
               <motion.button
-                onClick={() => openLead()}
+                onClick={openRegister}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="relative font-display font-bold text-sm px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2"
@@ -164,7 +164,7 @@ export default function Header() {
                 Войти
               </button>
               <button
-                onClick={() => { setMobileOpen(false); openLead() }}
+                onClick={() => { setMobileOpen(false); openRegister() }}
                 className="flex-1 py-3 rounded-xl bg-brand-yellow text-brand-dark font-bold text-sm"
               >
                 Начать проект

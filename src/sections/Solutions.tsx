@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Sparkles, Wand2, Sun, Eraser, BadgeCheck, ArrowRight } from 'lucide-react'
 
@@ -148,6 +149,7 @@ const slideVariants = {
    Section
 ───────────────────────────────── */
 export default function Solutions() {
+  const navigate = useNavigate()
   const [index, setIndex] = useState(0)
   const [dir, setDir] = useState(1)
   const [autoOn, setAutoOn] = useState(false)
@@ -274,7 +276,7 @@ export default function Solutions() {
             </div>
 
             <motion.button
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/app')}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               className="font-display font-bold text-[15px] px-6 py-3 rounded-xl bg-brand-yellow text-brand-dark flex items-center justify-center gap-2.5"

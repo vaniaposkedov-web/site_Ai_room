@@ -6,14 +6,12 @@ import { useModal } from '@/components/ModalProvider'
    Контакты — замените на реальные данные
 ───────────────────────────────── */
 const CONTACTS = {
-  email: 'hello@airoom.ru',
-  telegram: 'https://t.me/airoom',
+  email: 'web14329@gmail.com',
+  telegram: 'https://t.me/bnbslow',
 }
 
 const SOCIALS = [
   { label: 'Telegram', href: CONTACTS.telegram },
-  { label: 'VK', href: 'https://vk.com/airoom' },
-  { label: 'WhatsApp', href: 'https://wa.me/70000000000' },
 ]
 
 /* Реальные ссылки на секции страницы */
@@ -39,7 +37,7 @@ const NAV: { title: string; links: { label: string; href: string }[] }[] = [
 ]
 
 export default function Footer() {
-  const { openLead } = useModal()
+  const { openRegister } = useModal()
 
   return (
     <footer className="relative border-t border-white/[0.07] bg-[#1a1a1a] overflow-hidden">
@@ -91,7 +89,7 @@ export default function Footer() {
               <div className="text-sm text-brand-dark/60">Оставьте заявку — поможем начать.</div>
             </div>
             <motion.button
-              onClick={() => openLead()}
+              onClick={openRegister}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               className="shrink-0 flex items-center gap-2 bg-brand-dark text-white font-display font-bold text-sm px-6 py-3 rounded-xl"

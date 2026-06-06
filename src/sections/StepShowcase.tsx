@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { Upload, Wand2, LayoutGrid, FileText, Sparkles, CheckCircle2, Star } from 'lucide-react'
+import { Upload, Wand2, LayoutGrid, FileText, Sparkles, CheckCircle2, Star, ArrowRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 /* ─────────────────────────────────
@@ -130,6 +131,7 @@ function CardPreview({ step }: { step: number }) {
    Section
 ───────────────────────────────── */
 export default function StepShowcase() {
+  const navigate = useNavigate()
   const [active, setActive] = useState(0)
   const [restartKey, setRestartKey] = useState(0)
 
@@ -247,6 +249,19 @@ export default function StepShowcase() {
           <div className="flex justify-center">
             <CardPreview step={active} />
           </div>
+        </div>
+
+        {/* CTA — попробовать */}
+        <div className="flex justify-center mt-12">
+          <motion.button
+            onClick={() => navigate('/app')}
+            whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(255,225,53,0.35)' }}
+            whileTap={{ scale: 0.97 }}
+            className="font-display font-bold text-base px-8 py-4 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2.5 transition-shadow"
+          >
+            Попробовать бесплатно
+            <ArrowRight size={18} />
+          </motion.button>
         </div>
       </div>
     </section>
