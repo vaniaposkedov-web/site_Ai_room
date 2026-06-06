@@ -363,7 +363,7 @@ export default function TryOnSimulator() {
 
           {/* CENTER photo (drop target) */}
           <div className="relative z-10 flex justify-center">
-            <div className="relative">
+            <div className="relative w-full max-w-[310px]">
               {/* rotating glow halo */}
               <motion.div
                 aria-hidden
@@ -385,7 +385,7 @@ export default function TryOnSimulator() {
                 scale: pulse ? 1.04 : dragOver ? 1.025 : 1,
               }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[310px] aspect-[3/4] rounded-3xl overflow-hidden bg-[#141414] border border-[#FFE135]/25"
+              className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden bg-[#141414] border border-[#FFE135]/25"
             >
               <MorphImage src={centralImg} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10 pointer-events-none z-10" />
