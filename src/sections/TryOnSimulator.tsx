@@ -52,42 +52,35 @@ const LEFT_IDS = ['dress', 'jacket', 'turtleneck']
 const RIGHT_IDS = ['skirt', 'blazer']
 
 /* ─────────────────────────────────
-   Cube-disintegration image
+   Smooth photo morph (whole image, no tiles)
 ───────────────────────────────── */
-const COLS = 5
-const ROWS = 7
-function CubeImage({ src }: { src: string }) {
+function MorphImage({ src }: { src: string }) {
   return (
-    <div className="absolute inset-0" style={{ perspective: 700 }}>
-      <AnimatePresence mode="popLayout">
-        <motion.div
+    <div className="absolute inset-0">
+      {/* crossfade + zoom-out + deblur — фото остаётся цельным */}
+      <AnimatePresence>
+        <motion.img
           key={src}
-          className="absolute inset-0 grid"
-          style={{
-            gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-            gridTemplateRows: `repeat(${ROWS}, 1fr)`,
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {Array.from({ length: COLS * ROWS }).map((_, i) => {
-            const c = i % COLS
-            const r = Math.floor(i / COLS)
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.25, rotateX: -65, z: -40 }}
-                animate={{ opacity: 1, scale: 1, rotateX: 0, z: 0 }}
-                exit={{ opacity: 0, scale: 0.25, rotateX: 65, z: -40 }}
-                transition={{ duration: 0.5, delay: (c + r) * 0.022, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  backgroundImage: `url(${src})`,
-                  backgroundSize: `${COLS * 100}% ${ROWS * 100}%`,
-                  backgroundPosition: `${(c / (COLS - 1)) * 100}% ${(r / (ROWS - 1)) * 100}%`,
-                }}
-              />
-            )
-          })}
-        </motion.div>
+          src={src}
+          alt="Образ"
+          className="absolute inset-0 w-full h-full object-cover"
+          initial={{ opacity: 0, scale: 1.12, filter: 'blur(16px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 1.04, filter: 'blur(10px)' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </AnimatePresence>
+      {/* короткая AI-вспышка при смене */}
+      <AnimatePresence>
+        <motion.div
+          key={src + '-flash'}
+          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0.4 }}
+          animate={{ opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.55 }}
+          style={{ background: 'radial-gradient(circle at 50% 40%, rgba(255,225,53,0.4), transparent 70%)' }}
+        />
       </AnimatePresence>
     </div>
   )
@@ -218,7 +211,8 @@ export default function TryOnSimulator() {
     setLastApplied(null)
   }
 
-  // measure connection lines (card centre → photo centre), relative to stage
+  // measure connection lines — from card edge to the PHOTO BORDER (not centre),
+  // so they plug into the frame instead of crossing over the image
   useLayoutEffect(() => {
     const measure = () => {
       const stage = stageRef.current?.getBoundingClientRect()
@@ -226,6 +220,8 @@ export default function TryOnSimulator() {
       if (!stage || !photo) return
       const cx = photo.left + photo.width / 2 - stage.left
       const cy = photo.top + photo.height / 2 - stage.top
+      const hw = photo.width / 2
+      const hh = photo.height / 2
       const next: Line[] = []
       for (const id of connected) {
         const el = cardRefs.current[id]
@@ -233,7 +229,15 @@ export default function TryOnSimulator() {
         const r = el.getBoundingClientRect()
         const x1 = r.left + r.width / 2 - stage.left
         const y1 = r.top + r.height / 2 - stage.top
-        next.push({ id, x1, y1, x2: cx, y2: cy, len: Math.hypot(cx - x1, cy - y1) })
+        const dx = x1 - cx
+        const dy = y1 - cy
+        // точка пересечения луча (центр→карточка) с рамкой фото
+        const tx = dx !== 0 ? hw / Math.abs(dx) : Infinity
+        const ty = dy !== 0 ? hh / Math.abs(dy) : Infinity
+        const t = Math.min(tx, ty, 1)
+        const x2 = cx + dx * t
+        const y2 = cy + dy * t
+        next.push({ id, x1, y1, x2, y2, len: Math.hypot(x2 - x1, y2 - y1) })
       }
       setLines(next)
     }
@@ -315,23 +319,31 @@ export default function TryOnSimulator() {
           ref={stageRef}
           className="relative grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6"
         >
-          {/* connection lines */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
+          {/* connection lines — sit BEHIND the photo, plug into its border */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
             {lines.map((l) => (
               <g key={l.id}>
+                {/* soft glow */}
+                <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#FFE135" strokeWidth={7} strokeLinecap="round" opacity={0.12} />
+                {/* main line draws itself in */}
                 <motion.line
                   x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
                   stroke="#FFE135" strokeWidth={2} strokeLinecap="round"
                   strokeDasharray={l.len}
-                  initial={{ strokeDashoffset: l.len, opacity: 0 }}
-                  animate={{ strokeDashoffset: 0, opacity: 0.7 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  initial={{ strokeDashoffset: l.len }}
+                  animate={{ strokeDashoffset: 0 }}
+                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                 />
+                {/* port plugging into the photo border */}
                 <motion.circle
-                  cx={l.x1} cy={l.y1} r={3} fill="#FFE135"
+                  cx={l.x2} cy={l.y2} r={5} fill="#FFE135"
                   initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.25, type: 'spring', stiffness: 300, damping: 18 }}
                 />
+                <circle cx={l.x2} cy={l.y2} r={5} fill="none" stroke="#FFE135" strokeWidth={1}>
+                  <animate attributeName="r" from="5" to="14" dur="1.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.5" to="0" dur="1.6s" repeatCount="indefinite" />
+                </circle>
               </g>
             ))}
           </svg>
@@ -340,20 +352,32 @@ export default function TryOnSimulator() {
           {renderColumn(LEFT_IDS)}
 
           {/* CENTER photo (drop target) */}
-          <div className="flex justify-center">
+          <div className="relative z-10 flex justify-center">
             <motion.div
               ref={dropRef}
               animate={{
                 boxShadow: pulse || dragOver
-                  ? '0 0 0 6px rgba(255,225,53,0.4), 0 24px 60px rgba(0,0,0,0.55)'
+                  ? '0 0 0 6px rgba(255,225,53,0.4), 0 24px 70px rgba(0,0,0,0.6)'
                   : '0 0 0 2px rgba(255,225,53,0.2), 0 24px 60px rgba(0,0,0,0.45)',
                 scale: pulse ? 1.04 : dragOver ? 1.025 : 1,
               }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-[300px] aspect-[3/4] rounded-2xl overflow-hidden bg-[#141414] border border-[#FFE135]/20"
+              className="relative w-full max-w-[310px] aspect-[3/4] rounded-3xl overflow-hidden bg-[#141414] border border-[#FFE135]/25"
             >
-              <CubeImage src={centralImg} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none z-10" />
+              <MorphImage src={centralImg} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10 pointer-events-none z-10" />
+
+              {/* drop hint ring while dragging over */}
+              <AnimatePresence>
+                {dragOver && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-2 rounded-2xl border-2 border-dashed border-[#FFE135] pointer-events-none z-10"
+                  />
+                )}
+              </AnimatePresence>
 
               {/* AI badge */}
               <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 bg-black/45 backdrop-blur-md px-2 py-1 rounded-md text-[9px] uppercase tracking-widest font-mono text-white/70">
