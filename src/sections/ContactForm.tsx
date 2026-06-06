@@ -110,9 +110,9 @@ function Field({
 }
 
 const TRUST = [
-  '3 карточки бесплатно — до оплаты',
-  'Готово за 1 день, без студии',
-  'Ваши фото не передаём третьим лицам',
+  'Ответ в течение дня',
+  'Покажем примеры под ваш товар',
+  'Подберём тариф без обязательств',
 ]
 
 /* ─────────────────────────────────
@@ -157,14 +157,14 @@ export default function ContactForm() {
 
           <div className="relative">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest bg-brand-dark/10 px-3 py-1 rounded-full mb-6">
-              <Mail size={11} /> Бесплатный тест
+              <Mail size={11} /> Связаться
             </div>
             <h2 className="font-display font-black text-3xl md:text-[34px] leading-[1.1] mb-4">
-              Попробуйте на своём товаре
+              Обсудим вашу задачу
             </h2>
             <p className="text-brand-dark/70 text-sm leading-relaxed">
-              Оставьте контакт и пришлите фото — обработаем 3 карточки
-              бесплатно и покажем результат в течение дня.
+              Оставьте контакт — расскажем о тарифах и сроках, покажем примеры
+              готовых карточек под ваш товар.
             </p>
           </div>
 
@@ -216,7 +216,7 @@ export default function ContactForm() {
                   ) : (
                     <>
                       <Send size={17} strokeWidth={2.5} />
-                      Получить 3 карточки бесплатно
+                      Отправить заявку
                     </>
                   )}
                 </motion.button>
@@ -258,8 +258,8 @@ export default function ContactForm() {
                   transition={{ delay: 0.38 }}
                   className="text-white/40 text-sm leading-relaxed max-w-[260px]"
                 >
-                  Пришлём 3 готовые карточки в течение дня
-                  на <span className="text-brand-yellow/80">{form.email}</span>
+                  Свяжемся с вами в течение дня
+                  по адресу <span className="text-brand-yellow/80">{form.email}</span>
                 </motion.p>
 
                 <motion.button

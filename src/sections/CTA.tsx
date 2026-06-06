@@ -1,12 +1,14 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { useModal } from '@/components/ModalProvider'
 
-const perks = ['Бесплатный аудит данных', 'Ответ за 24 часа', 'Без обязательств']
+const perks = ['Ответ в течение дня', 'Без обязательств', 'Покажем на вашем товаре']
 
 export default function CTA() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+  const { openLead } = useModal()
 
   return (
     <section id="cta" className="py-28 px-6">
@@ -45,15 +47,15 @@ export default function CTA() {
               initial={{ opacity: 0, y: 18 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: .2 }}
               className="font-display font-black text-5xl lg:text-7xl text-[#262626] tracking-tight leading-[1.0] mb-6"
             >
-              Поднимем ваш<br />бренд с AI
+              Карточки, которые<br />продают
             </motion.h2>
 
             <motion.p
               initial={{ opacity: 0, y: 12 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: .28 }}
               className="text-[#262626]/60 text-lg max-w-lg mx-auto mb-10"
             >
-              Расскажите про бизнес — за 24 часа вернёмся с первичным аудитом
-              данных и конкретными точками роста.
+              Оставьте e-mail — пришлём примеры готовых карточек, тарифы
+              и ответим на вопросы.
             </motion.p>
 
             <motion.div
@@ -67,7 +69,9 @@ export default function CTA() {
                   placeholder="your@brand.ru"
                   className="flex-1 bg-transparent text-white text-sm px-4 py-2 outline-none placeholder:text-white/25"
                 />
-                <button className="btn bg-[#FFE135] text-[#262626] text-sm px-5 py-2.5 shrink-0 group"
+                <button
+                  onClick={() => openLead()}
+                  className="btn bg-[#FFE135] text-[#262626] text-sm px-5 py-2.5 shrink-0 group"
                   style={{ borderRadius: '10px' }}>
                   Отправить
                   <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />

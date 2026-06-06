@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Sparkles, ArrowRight } from 'lucide-react'
 
@@ -35,6 +36,7 @@ function TypewriterHeadline() {
    Hero section
 ────────────────────────────────── */
 export default function Hero() {
+  const navigate = useNavigate()
   return (
     <section id="hero" className="relative min-h-screen flex flex-col justify-center items-center text-center pt-20 pb-16 px-6 overflow-hidden">
       {/* BG: dot grid */}
@@ -95,7 +97,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.32 }}
         >
           <motion.button
-            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => navigate('/app')}
             whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(255,225,53,0.35)' }}
             whileTap={{ scale: 0.97 }}
             className="font-display font-bold text-base sm:text-lg px-8 py-4 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2.5 transition-shadow"

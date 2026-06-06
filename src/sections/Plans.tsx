@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Check, Sparkles, ArrowRight } from 'lucide-react'
+import { useModal } from '@/components/ModalProvider'
 
 /* ─────────────────────────────────
    Pricing plans for card generation
@@ -66,6 +67,7 @@ const PLANS: Plan[] = [
 ]
 
 export default function Plans() {
+  const { openLead } = useModal()
   return (
     <section id="pricing" className="relative py-24 px-6 overflow-hidden">
       <div className="absolute inset-0 dot-grid opacity-25 pointer-events-none" />
@@ -135,7 +137,7 @@ export default function Plans() {
               </ul>
 
               <motion.button
-                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => openLead(plan.name)}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className={`w-full py-3.5 rounded-xl font-display font-bold flex items-center justify-center gap-2 transition-colors ${

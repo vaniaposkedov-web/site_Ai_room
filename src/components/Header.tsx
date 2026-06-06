@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Menu, X } from 'lucide-react'
+import { useModal } from '@/components/ModalProvider'
 
 const NAV = [
   { label: 'Как это работает', href: '#step-showcase' },
@@ -15,6 +16,7 @@ export default function Header() {
   const [active,    setActive]    = useState('')
   const [mobileOpen,setMobileOpen]= useState(false)
   const [hovering,  setHovering]  = useState<string | null>(null)
+  const { openLogin, openLead } = useModal()
 
   useEffect(() => {
     const onScroll = () => {
@@ -57,17 +59,10 @@ export default function Header() {
           <motion.a
             href="#"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2.5 cursor-pointer shrink-0"
+            className="flex items-center cursor-pointer shrink-0"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            <motion.div
-              className="w-8 h-8 rounded-lg bg-brand-yellow flex items-center justify-center"
-              whileHover={{ rotate: [0, -5, 5, 0] }}
-              transition={{ duration: 0.4 }}
-            >
-              <Sparkles size={16} className="text-brand-dark" strokeWidth={2.5} />
-            </motion.div>
             <span className="font-display font-black text-xl tracking-tight text-white">
               AI<span className="text-brand-yellow">ROOM</span>
             </span>
@@ -105,7 +100,7 @@ export default function Header() {
 
           {/* ── CTA ── */}
           <div className="hidden md:flex items-center gap-3 ml-auto">
-            <button className="text-sm text-white/55 hover:text-white transition-colors px-3 py-2">
+            <button onClick={openLogin} className="text-sm text-white/55 hover:text-white transition-colors px-3 py-2">
               Войти
             </button>
 
@@ -117,6 +112,7 @@ export default function Header() {
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               />
               <motion.button
+                onClick={() => openLead()}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="relative font-display font-bold text-sm px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark flex items-center gap-2"
@@ -161,10 +157,16 @@ export default function Header() {
               </motion.button>
             ))}
             <div className="flex gap-3 pt-5">
-              <button className="flex-1 py-3 rounded-xl border border-white/15 text-sm font-semibold text-white/70">
+              <button
+                onClick={() => { setMobileOpen(false); openLogin() }}
+                className="flex-1 py-3 rounded-xl border border-white/15 text-sm font-semibold text-white/70"
+              >
                 Войти
               </button>
-              <button className="flex-1 py-3 rounded-xl bg-brand-yellow text-brand-dark font-bold text-sm">
+              <button
+                onClick={() => { setMobileOpen(false); openLead() }}
+                className="flex-1 py-3 rounded-xl bg-brand-yellow text-brand-dark font-bold text-sm"
+              >
                 Начать проект
               </button>
             </div>
