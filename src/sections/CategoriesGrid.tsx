@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { ArrowUpRight, ChevronLeft, ChevronRight, LayoutGrid, X } from 'lucide-react'
-
-/* 3 варианта обработки, раскрываются по клику на категорию */
-const CONCEPTS = [
-  { label: 'Студия', tint: 'linear-gradient(to top, rgba(0,0,0,0.35), transparent 60%)' },
-  { label: 'Интерьер', tint: 'linear-gradient(to top, rgba(56,28,110,0.4), transparent 60%)' },
-  { label: 'Lifestyle', tint: 'linear-gradient(to top, rgba(255,225,53,0.16), transparent 60%)' },
-]
+import { motion, useInView } from 'framer-motion'
+import { ArrowUpRight, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react'
 
 /* ─────────────────────────────────
    Data
@@ -68,7 +61,7 @@ const CATEGORIES: Category[] = [
 /* ─────────────────────────────────
    Single category card
 ───────────────────────────────── */
-function CategoryCard({ category, index, onExpand }: { category: Category; index: number; onExpand: (c: Category) => void }) {
+function CategoryCard({ category, index }: { category: Category; index: number }) {
   const [hover, setHover] = useState(false)
 
   return (
@@ -88,11 +81,10 @@ function CategoryCard({ category, index, onExpand }: { category: Category; index
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[60%] bg-[#FFE135]/30 rounded-full blur-3xl" />
       </motion.div>
 
-      <motion.button
-        onClick={() => onExpand(category)}
+      <motion.div
         whileHover={{ scale: 1.03 }}
         transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-        className="block w-full text-left relative aspect-[3/4] rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.06] group"
+        className="block relative aspect-[3/4] rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.06] group"
       >
         {/* Image */}
         <motion.img
@@ -168,7 +160,7 @@ function CategoryCard({ category, index, onExpand }: { category: Category; index
             style={{ boxShadow: '0 0 12px rgba(255,225,53,0.6)' }}
           />
         </div>
-      </motion.button>
+      </motion.div>
     </div>
   )
 }
@@ -182,14 +174,6 @@ export default function CategoriesGrid() {
   const pausedRef = useRef(false)
   const headerRef = useRef(null)
   const headerInView = useInView(headerRef, { once: true, margin: '-80px' })
-  const [expanded, setExpanded] = useState<Category | null>(null)
-
-  // Пауза карусели и блокировка прокрутки, пока открыта раскрытая карточка
-  useEffect(() => {
-    pausedRef.current = !!expanded
-    document.body.style.overflow = expanded ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [expanded])
 
   // Smooth GPU transform-based marquee (right → left). scrollLeft is janky,
   // translate3d is buttery.
@@ -299,7 +283,7 @@ export default function CategoriesGrid() {
       <div
         className="relative z-10 overflow-hidden"
         onMouseEnter={() => (pausedRef.current = true)}
-        onMouseLeave={() => { if (!expanded) pausedRef.current = false }}
+        onMouseLeave={() => (pausedRef.current = false)}
       >
         {/* py даёт место для увеличения карточек, чтобы они не обрезались */}
         <div
@@ -307,7 +291,7 @@ export default function CategoriesGrid() {
           className="flex gap-5 w-max px-6 py-10 will-change-transform"
         >
           {loop.map((cat, i) => (
-            <CategoryCard key={`${cat.id}-${i}`} category={cat} index={i} onExpand={setExpanded} />
+            <CategoryCard key={`${cat.id}-${i}`} category={cat} index={i} />
           ))}
         </div>
 
@@ -315,67 +299,6 @@ export default function CategoriesGrid() {
         <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#262626] to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#262626] to-transparent" />
       </div>
-
-      {/* Expanded category — раскрытие с 3 под-карточками */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            className="fixed inset-0 z-[90] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setExpanded(null)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-3xl rounded-3xl border border-white/[0.08] bg-[#1A1A1A] p-6 shadow-2xl"
-            >
-              <button
-                onClick={() => setExpanded(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
-                aria-label="Закрыть"
-              >
-                <X size={17} />
-              </button>
-
-              <div className="badge mb-3">
-                <LayoutGrid size={11} /> {expanded.label}
-              </div>
-              <h3 className="font-display font-black text-2xl text-white mb-1">{expanded.label}</h3>
-              <p className="text-white/40 text-sm mb-5">3 варианта обработки — листайте карточки →</p>
-
-              <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 -mx-1 px-1">
-                {CONCEPTS.map((c, i) => (
-                  <motion.div
-                    key={c.label}
-                    initial={{ opacity: 0, x: 36, rotate: 5, scale: 0.94 }}
-                    animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-                    transition={{ delay: 0.08 + i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-                    className="snap-center shrink-0 w-[220px] sm:w-[250px] rounded-2xl overflow-hidden border border-white/[0.08] bg-[#141414]"
-                  >
-                    <div className="relative aspect-[3/4]">
-                      <img src={expanded.img} alt={c.label} className="w-full h-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0" style={{ background: c.tint }} />
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-[#FFE135] text-[#262626] text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md">
-                        {c.label}
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/85 to-transparent">
-                        <div className="font-display font-bold text-white text-sm leading-tight">
-                          {expanded.label} · {c.label}
-                        </div>
-                        <div className="text-[10px] text-white/50 mt-0.5">Готовый кадр для карточки</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   )
 }
