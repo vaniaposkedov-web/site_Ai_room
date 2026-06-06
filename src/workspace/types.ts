@@ -80,7 +80,7 @@ export const NODE_DEFS: Record<string, NodeDef> = {
     label: 'Текст / Описание',
     cost: 0,
     icon: Type,
-    category: 'Источники',
+    category: 'Дизайн',
     tags: ['текст', 'описание', 'промпт', 'seo'],
     description: 'Текстовый блок — отрабатывает на клиенте, бесплатно.',
     inputs: [],

@@ -3,7 +3,7 @@ import { Undo2, Redo2, Save, Trash2, AlignStartVertical, FolderOpen, ChevronDown
 import { useFlow } from './store'
 
 function btn(disabled?: boolean) {
-  return `flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-colors ${
+  return `flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[13px] transition-colors ${
     disabled ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
   }`
 }
@@ -42,7 +42,7 @@ export default function Toolbar() {
   }
 
   return (
-    <div className="h-11 flex-shrink-0 flex items-center gap-1 px-3 border-b border-white/[0.07] bg-[#161616] z-10">
+    <div className="h-12 flex-shrink-0 flex items-center gap-2 px-5 border-b border-white/[0.07] bg-[#161616] z-10">
       <button className={btn(!past)} disabled={!past} onClick={undo} title="Отменить (Ctrl+Z)">
         <Undo2 size={15} /> <span className="hidden lg:inline">Отменить</span>
       </button>
@@ -50,7 +50,7 @@ export default function Toolbar() {
         <Redo2 size={15} /> <span className="hidden lg:inline">Вернуть</span>
       </button>
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-white/10 mx-2.5" />
 
       <button className={btn()} onClick={autoLayout} title="Автовыравнивание">
         <AlignStartVertical size={15} /> <span className="hidden lg:inline">Выровнять</span>

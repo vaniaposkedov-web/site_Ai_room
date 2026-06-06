@@ -50,6 +50,7 @@ export default function Workspace() {
   const cost = useFlow((s) => s.graphCost())
   const fileCount = useFlow((s) => s.files.length)
   const price = cost * Math.max(1, fileCount)
+  const allDone = useFlow((s) => s.nodes.length > 0 && s.nodes.every((n) => n.data.status === 'done'))
   const dispBalance = useCountUp(balance)
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Workspace() {
     return () => clearTimeout(t)
   }, [])
 
-  const canRun = !running && cost > 0 && balance >= price
+  const canRun = !running && cost > 0 && balance >= price && !allDone
 
   return (
     <div className="h-screen flex flex-col bg-brand-dark text-white overflow-hidden">
@@ -122,7 +123,7 @@ export default function Workspace() {
             className="flex items-center gap-2 font-display font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {running ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.5} />}
-            {running ? 'Генерация…' : (
+            {running ? 'Генерация…' : allDone ? 'Измените параметры' : (
               <span className="flex items-center gap-1">
                 Сгенерировать
                 <span className="opacity-70 flex items-center gap-0.5">(от {price} <Star size={11} fill="currentColor" />)</span>

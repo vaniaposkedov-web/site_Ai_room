@@ -96,13 +96,23 @@ const seedEdges: Edge[] = [
   { id: 'e3', source: seedNodes[2].id, sourceHandle: 'image', target: seedNodes[3].id, targetHandle: 'image', type: 'flow' },
 ]
 
+/* демо-исходники — реальные фото товаров для маркетплейса */
+const seedFiles: BatchFile[] = [
+  { id: uid(), name: 'sneakers.jpg', url: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=300&q=80', status: 'idle', progress: 0, current: '' },
+  { id: uid(), name: 'jacket.jpg', url: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=300&q=80', status: 'idle', progress: 0, current: '' },
+  { id: uid(), name: 'serum.jpg', url: 'https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?auto=format&fit=crop&w=300&q=80', status: 'idle', progress: 0, current: '' },
+]
+
+/* сбросить статусы всех узлов в idle (граф «грязный» после правок) */
+const resetStatuses = (nodes: FNode[]): FNode[] => nodes.map((n) => ({ ...n, data: { ...n.data, status: 'idle' } }))
+
 export const useFlow = create<State>((set, get) => ({
   nodes: seedNodes,
   edges: seedEdges,
   balance: START_BALANCE,
   selectedId: null,
   running: false,
-  files: [],
+  files: seedFiles,
   past: [],
   future: [],
   templates: loadTemplates(),
@@ -135,13 +145,13 @@ export const useFlow = create<State>((set, get) => ({
     if (!get().isValidConnection(c)) return
     get().snapshot()
     const cleaned = get().edges.filter((e) => !(e.target === c.target && e.targetHandle === c.targetHandle))
-    set({ edges: addEdge({ ...c, type: 'flow' }, cleaned) })
+    set((s) => ({ edges: addEdge({ ...c, type: 'flow' }, cleaned), nodes: resetStatuses(s.nodes) }))
   },
 
   addNode: (type, position) => {
     get().snapshot()
     set((s) => ({
-      nodes: [...s.nodes, { id: newId(), type: 'flow', position, data: { type, status: 'idle', params: {} } }],
+      nodes: [...resetStatuses(s.nodes), { id: newId(), type: 'flow', position, data: { type, status: 'idle', params: {} } }],
     }))
   },
 
@@ -150,7 +160,7 @@ export const useFlow = create<State>((set, get) => ({
     if (!selectedId) return
     get().snapshot()
     set((s) => ({
-      nodes: s.nodes.filter((n) => n.id !== selectedId),
+      nodes: resetStatuses(s.nodes.filter((n) => n.id !== selectedId)),
       edges: s.edges.filter((e) => e.source !== selectedId && e.target !== selectedId),
       selectedId: null,
     }))
@@ -160,7 +170,7 @@ export const useFlow = create<State>((set, get) => ({
 
   setParam: (id, key, value) =>
     set((s) => ({
-      nodes: s.nodes.map((n) =>
+      nodes: resetStatuses(s.nodes).map((n) =>
         n.id === id ? { ...n, data: { ...n.data, params: { ...n.data.params, [key]: value } } } : n,
       ),
     })),
@@ -177,7 +187,7 @@ export const useFlow = create<State>((set, get) => ({
       return {
         past: s.past.slice(0, -1),
         future: [{ nodes: s.nodes, edges: s.edges }, ...s.future],
-        nodes: prev.nodes,
+        nodes: resetStatuses(prev.nodes),
         edges: prev.edges,
         selectedId: null,
       }
@@ -189,7 +199,7 @@ export const useFlow = create<State>((set, get) => ({
       return {
         future: s.future.slice(1),
         past: [...s.past, { nodes: s.nodes, edges: s.edges }],
-        nodes: next.nodes,
+        nodes: resetStatuses(next.nodes),
         edges: next.edges,
         selectedId: null,
       }

@@ -5,8 +5,8 @@ import { CheckCircle2, X, Star, Loader2 } from 'lucide-react'
 import { NODE_DEFS, PORT_COLORS } from './types'
 import { useFlow, type FNode } from './store'
 
-const HEADER_H = 42
-const ROW_TOP = (i: number) => HEADER_H + 22 + i * 26
+const HEADER_H = 36
+const ROW_TOP = (i: number) => HEADER_H + 16 + i * 22
 
 export default function FlowNode({ id, data, selected }: NodeProps<FNode>) {
   const def = NODE_DEFS[data.type]
@@ -23,13 +23,19 @@ export default function FlowNode({ id, data, selected }: NodeProps<FNode>) {
     }
   }, [status, cost])
 
-  // обязательный вход не подключён?
-  const missing = def.inputs.some(
-    (p) => p.required && !edges.some((e) => e.target === id && e.targetHandle === p.id),
-  )
+  const connected = (handleId: string) => edges.some((e) => e.target === id && e.targetHandle === handleId)
 
-  const rows = Math.max(def.inputs.length, def.outputs.length, 1)
-  const height = ROW_TOP(rows - 1) + 44
+  // необязательный порт скрываем, если значение задано в инспекторе и связь не подключена
+  const inputs = def.inputs.filter((p) => {
+    if (p.required) return true
+    const paramFilled = (data.params[p.id] ?? '').trim().length > 0
+    return connected(p.id) || !paramFilled
+  })
+
+  const missing = def.inputs.some((p) => p.required && !connected(p.id))
+
+  const rows = Math.max(inputs.length, def.outputs.length, 1)
+  const height = ROW_TOP(rows - 1) + 32
 
   const ring =
     status === 'error'
@@ -71,9 +77,9 @@ export default function FlowNode({ id, data, selected }: NodeProps<FNode>) {
       </AnimatePresence>
 
       {/* header */}
-      <div className="flex items-center gap-2 px-3 h-[42px] border-b border-white/[0.07]">
-        <div className="w-6 h-6 rounded-md bg-brand-yellow/15 border border-brand-yellow/30 flex items-center justify-center flex-shrink-0">
-          <Icon size={13} className="text-brand-yellow" />
+      <div className="flex items-center gap-2 px-2.5 h-[36px] border-b border-white/[0.07]">
+        <div className="w-5 h-5 rounded-md bg-brand-yellow/15 border border-brand-yellow/30 flex items-center justify-center flex-shrink-0">
+          <Icon size={12} className="text-brand-yellow" />
         </div>
         <span className="text-[12px] font-display font-bold truncate flex-1">{def.label}</span>
         {cost > 0 ? (
@@ -81,38 +87,29 @@ export default function FlowNode({ id, data, selected }: NodeProps<FNode>) {
             {cost} <Star size={9} fill="currentColor" />
           </span>
         ) : (
-          <span className="text-[9px] text-white/30 uppercase tracking-wider">free</span>
+          <span className="text-[9px] text-white/35 uppercase tracking-wider">free</span>
         )}
       </div>
 
       {/* status indicator */}
-      <div className="absolute right-2.5 top-[48px] z-10">
+      <div className="absolute right-2.5 top-[42px] z-10">
         {status === 'processing' && <Loader2 size={13} className="text-brand-yellow animate-spin" />}
         {status === 'done' && <CheckCircle2 size={14} className="text-[#4ADE80]" />}
         {status === 'error' && <X size={14} className="text-[#EF4444]" />}
       </div>
 
       {/* inputs */}
-      {def.inputs.map((p, i) => (
+      {inputs.map((p, i) => (
         <div key={p.id}>
           <Handle
             type="target"
             position={Position.Left}
             id={p.id}
-            style={{
-              top: ROW_TOP(i),
-              width: 12,
-              height: 12,
-              background: PORT_COLORS[p.type],
-              border: '2px solid #1A1A1A',
-            }}
+            style={{ top: ROW_TOP(i), width: 12, height: 12, background: PORT_COLORS[p.type], border: '2px solid #1A1A1A' }}
           />
-          <span
-            className="absolute left-3 text-[10px] text-white/55 flex items-center gap-1"
-            style={{ top: ROW_TOP(i) - 7 }}
-          >
+          <span className="absolute left-3 text-[10px] text-white/90 font-semibold flex items-center gap-1" style={{ top: ROW_TOP(i) - 7 }}>
             {p.label}
-            {p.required && <span className="text-[#EF4444]">*</span>}
+            {p.required && <span className="text-[#FF6F6F]">*</span>}
           </span>
         </div>
       ))}
@@ -124,29 +121,20 @@ export default function FlowNode({ id, data, selected }: NodeProps<FNode>) {
             type="source"
             position={Position.Right}
             id={p.id}
-            style={{
-              top: ROW_TOP(i),
-              width: 12,
-              height: 12,
-              background: PORT_COLORS[p.type],
-              border: '2px solid #1A1A1A',
-            }}
+            style={{ top: ROW_TOP(i), width: 12, height: 12, background: PORT_COLORS[p.type], border: '2px solid #1A1A1A' }}
           />
-          <span
-            className="absolute right-3 text-[10px] text-white/55"
-            style={{ top: ROW_TOP(i) - 7 }}
-          >
+          <span className="absolute right-3 text-[10px] text-white/90 font-semibold" style={{ top: ROW_TOP(i) - 7 }}>
             {p.label}
           </span>
         </div>
       ))}
 
       {/* footer status text */}
-      <div className="absolute left-0 right-0 bottom-0 px-3 py-1.5 text-[9px] uppercase tracking-wider border-t border-white/[0.06]">
+      <div className="absolute left-0 right-0 bottom-0 px-2.5 py-1 text-[9px] uppercase tracking-wider border-t border-white/[0.06]">
         {status === 'processing' && <span className="text-brand-yellow">Обработка…</span>}
         {status === 'done' && <span className="text-[#4ADE80]">Готово</span>}
         {status === 'error' && <span className="text-[#EF4444]">Ошибка</span>}
-        {status === 'idle' && <span className="text-white/25">{missing ? 'Нужен вход' : 'Ожидание'}</span>}
+        {status === 'idle' && <span className="text-white/30">{missing ? 'Нужен вход' : 'Ожидание'}</span>}
       </div>
     </motion.div>
   )
