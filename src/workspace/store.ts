@@ -24,6 +24,7 @@ interface WizardState {
   balance: number
   productData: ProductData
   design: Design
+  history: string[] // сгенерированные варианты фона (шаг 2)
   toast: string | null
 
   setStep: (step: number) => void
@@ -35,6 +36,7 @@ interface WizardState {
   setToast: (msg: string | null) => void
   setDesign: (d: Partial<Design>) => void
   setPosition: (id: string, pos: { x: number; y: number }) => void
+  addHistory: (url: string) => void
 }
 
 const emptyProduct: ProductData = {
@@ -51,6 +53,7 @@ export const useWizard = create<WizardState>((set) => ({
   balance: 146,
   productData: emptyProduct,
   design: { color: '#FFFFFF', fontSize: 20, positions: {} },
+  history: [],
   toast: null,
 
   setStep: (step) => set({ step }),
@@ -62,4 +65,5 @@ export const useWizard = create<WizardState>((set) => ({
   setToast: (msg) => set({ toast: msg }),
   setDesign: (d) => set((s) => ({ design: { ...s.design, ...d } })),
   setPosition: (id, pos) => set((s) => ({ design: { ...s.design, positions: { ...s.design.positions, [id]: pos } } })),
+  addHistory: (url) => set((s) => ({ history: [url, ...s.history.filter((u) => u !== url)].slice(0, 12) })),
 }))
