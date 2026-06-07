@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ReactFlowProvider } from '@xyflow/react'
-import { ArrowLeft, Star, Plus, Sparkles, Loader2, X } from 'lucide-react'
+import { ArrowLeft, Star, Plus, Sparkles, Loader2, X, PanelLeft, SlidersHorizontal } from 'lucide-react'
 import NodeLibrary from '@/workspace/NodeLibrary'
 import Editor from '@/workspace/Editor'
 import Inspector from '@/workspace/Inspector'
@@ -43,7 +43,10 @@ const PACKS = [
 export default function Workspace() {
   const [booting, setBooting] = useState(true)
   const [topup, setTopup] = useState(false)
+  const [libOpen, setLibOpen] = useState(false)
+  const [inspectOpen, setInspectOpen] = useState(false)
 
+  const selectedId = useFlow((s) => s.selectedId)
   const balance = useFlow((s) => s.balance)
   const running = useFlow((s) => s.running)
   const run = useFlow((s) => s.run)
@@ -57,6 +60,12 @@ export default function Workspace() {
     const t = setTimeout(() => setBooting(false), 1700)
     return () => clearTimeout(t)
   }, [])
+
+  // на мобильных авто-открываем инспектор при выборе узла
+  useEffect(() => {
+    if (selectedId) { setInspectOpen(true); setLibOpen(false) }
+    else setInspectOpen(false)
+  }, [selectedId])
 
   const canRun = !running && cost > 0 && balance >= price && !allDone
 
@@ -95,6 +104,15 @@ export default function Workspace() {
           <ArrowLeft size={15} /> <span className="hidden sm:inline">На сайт</span>
         </Link>
 
+        {/* mobile: open node library */}
+        <button
+          onClick={() => { setLibOpen((v) => !v); setInspectOpen(false) }}
+          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-white/60 hover:text-white"
+          aria-label="Библиотека нодов"
+        >
+          <PanelLeft size={16} />
+        </button>
+
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           {/* balance */}
           <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl pl-3 pr-1.5 py-1.5">
@@ -116,6 +134,15 @@ export default function Workspace() {
             </button>
           </div>
 
+          {/* mobile: open inspector */}
+          <button
+            onClick={() => { setInspectOpen((v) => !v); setLibOpen(false) }}
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-white/60 hover:text-white"
+            aria-label="Инспектор"
+          >
+            <SlidersHorizontal size={16} />
+          </button>
+
           {/* generate */}
           <button
             onClick={() => run()}
@@ -123,9 +150,14 @@ export default function Workspace() {
             className="flex items-center gap-2 font-display font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {running ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.5} />}
-            {running ? 'Генерация…' : allDone ? 'Измените параметры' : (
+            {running ? 'Генерация…' : allDone ? (
+              <>
+                <span className="hidden sm:inline">Измените параметры</span>
+                <span className="sm:hidden">Готово</span>
+              </>
+            ) : (
               <span className="flex items-center gap-1">
-                Сгенерировать
+                <span className="hidden sm:inline">Сгенерировать</span>
                 <span className="opacity-70 flex items-center gap-0.5">(от {price} <Star size={11} fill="currentColor" />)</span>
               </span>
             )}
@@ -134,8 +166,8 @@ export default function Workspace() {
       </header>
 
       {/* Body: library · (toolbar + canvas + batch) · inspector */}
-      <div className="flex-1 flex min-h-0">
-        <NodeLibrary />
+      <div className="flex-1 flex min-h-0 relative">
+        <NodeLibrary mobileOpen={libOpen} onClose={() => setLibOpen(false)} />
         <div className="flex-1 flex flex-col min-w-0">
           <Toolbar />
           <ReactFlowProvider>
@@ -143,7 +175,15 @@ export default function Workspace() {
           </ReactFlowProvider>
           <BottomDrawer />
         </div>
-        <Inspector />
+        <Inspector mobileOpen={inspectOpen} onClose={() => setInspectOpen(false)} />
+
+        {/* mobile backdrop */}
+        {(libOpen || inspectOpen) && (
+          <div
+            className="lg:hidden fixed inset-0 top-16 z-30 bg-black/55"
+            onClick={() => { setLibOpen(false); setInspectOpen(false) }}
+          />
+        )}
       </div>
 
       {/* Top-up modal */}

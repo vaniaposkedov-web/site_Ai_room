@@ -73,7 +73,7 @@ export default function Editor() {
       >
         <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#333" />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable nodeColor="#FFE135" maskColor="rgba(0,0,0,0.6)" style={{ background: '#161616' }} />
+        <MiniMap className="max-lg:!hidden" pannable zoomable nodeColor="#FFE135" maskColor="rgba(0,0,0,0.6)" style={{ background: '#161616' }} />
       </ReactFlow>
     </div>
   )

@@ -1,20 +1,29 @@
-import { Trash2, Star } from 'lucide-react'
+import { Trash2, Star, X } from 'lucide-react'
 import { NODE_DEFS, PORT_COLORS, PORT_LABELS, STAR_TO_RUB } from './types'
 import { useFlow } from './store'
 
-export default function Inspector() {
+export default function Inspector({ mobileOpen = false, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const selectedId = useFlow((s) => s.selectedId)
   const node = useFlow((s) => s.nodes.find((n) => n.id === s.selectedId))
   const setParam = useFlow((s) => s.setParam)
   const removeSelected = useFlow((s) => s.removeSelected)
   const previewUrl = useFlow((s) => s.files[0]?.url)
 
+  const asideCls = `w-72 lg:w-72 flex-shrink-0 border-l border-white/[0.07] bg-[#161616] overflow-y-auto no-scrollbar max-lg:fixed max-lg:top-16 max-lg:bottom-0 max-lg:right-0 max-lg:z-40 max-lg:w-80 max-lg:shadow-2xl transition-transform duration-300 ${
+    mobileOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'
+  }`
+
   if (!node) {
     return (
-      <aside className="w-72 flex-shrink-0 border-l border-white/[0.07] bg-[#161616] p-5">
-        <div className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3">Инспектор</div>
-        <div className="text-sm text-white/30 leading-relaxed">
-          Выделите блок на холсте, чтобы открыть его настройки.
+      <aside className={asideCls}>
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs font-semibold uppercase tracking-widest text-white/40">Инспектор</div>
+            <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white"><X size={16} /></button>
+          </div>
+          <div className="text-sm text-white/30 leading-relaxed">
+            Выделите блок на холсте, чтобы открыть его настройки.
+          </div>
         </div>
       </aside>
     )
@@ -24,16 +33,17 @@ export default function Inspector() {
   const Icon = def.icon
 
   return (
-    <aside className="w-72 flex-shrink-0 border-l border-white/[0.07] bg-[#161616] overflow-y-auto no-scrollbar">
+    <aside className={asideCls}>
       <div className="px-5 py-4 border-b border-white/[0.07]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-brand-yellow/15 border border-brand-yellow/30 flex items-center justify-center">
             <Icon size={16} className="text-brand-yellow" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="font-display font-bold text-white text-sm">{def.label}</div>
             <div className="text-[10px] text-white/35">{def.category}</div>
           </div>
+          <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white"><X size={17} /></button>
         </div>
         <p className="text-[12px] text-white/45 leading-relaxed mt-3">{def.description}</p>
       </div>

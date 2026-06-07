@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, Search, ChevronDown } from 'lucide-react'
+import { Star, Search, ChevronDown, X } from 'lucide-react'
 import { NODE_LIST, CATEGORY_ORDER, PORT_COLORS, type Category, type NodeDef } from './types'
+import { useFlow } from './store'
 
-function NodeChip({ def }: { def: NodeDef }) {
+function NodeChip({ def, onAdd }: { def: NodeDef; onAdd: (type: string) => void }) {
   const Icon = def.icon
   return (
     <div
@@ -12,6 +13,8 @@ function NodeChip({ def }: { def: NodeDef }) {
         e.dataTransfer.setData('application/airoom-node', def.type)
         e.dataTransfer.effectAllowed = 'move'
       }}
+      onClick={() => onAdd(def.type)}
+      title="Перетащите или нажмите, чтобы добавить"
       className="relative group cursor-grab active:cursor-grabbing rounded-xl border border-white/[0.08] bg-[#1A1A1A] p-3 hover:border-brand-yellow/40 transition-colors"
     >
       <div className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold rounded-md px-1.5 py-0.5"
@@ -38,9 +41,15 @@ function NodeChip({ def }: { def: NodeDef }) {
   )
 }
 
-export default function NodeLibrary() {
+export default function NodeLibrary({ mobileOpen = false, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<Record<string, boolean>>({ Источники: true })
+
+  const addChip = (type: string) => {
+    const count = useFlow.getState().nodes.length
+    useFlow.getState().addNode(type, { x: 80 + (count % 5) * 70, y: 80 + (count % 5) * 70 })
+    onClose?.()
+  }
 
   const q = query.trim().toLowerCase()
   const matches = useMemo(
@@ -55,10 +64,17 @@ export default function NodeLibrary() {
   const isOpen = (cat: Category) => (q ? byCat(cat).length > 0 : !!open[cat])
 
   return (
-    <aside className="w-60 flex-shrink-0 border-r border-white/[0.07] bg-[#161616] flex flex-col">
+    <aside
+      className={`w-64 lg:w-60 flex-shrink-0 border-r border-white/[0.07] bg-[#161616] flex flex-col max-lg:fixed max-lg:top-16 max-lg:bottom-0 max-lg:left-0 max-lg:z-40 max-lg:shadow-2xl transition-transform duration-300 ${
+        mobileOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'
+      }`}
+    >
       {/* sticky search */}
       <div className="sticky top-0 z-10 bg-[#161616] border-b border-white/[0.07] p-3">
-        <div className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-2">Библиотека</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-semibold uppercase tracking-widest text-white/40">Библиотека</div>
+          <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white"><X size={16} /></button>
+        </div>
         <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#1A1A1A] px-2.5 py-2 focus-within:border-brand-yellow/40">
           <Search size={14} className="text-white/30" />
           <input
@@ -98,7 +114,7 @@ export default function NodeLibrary() {
                     className="overflow-hidden"
                   >
                     <div className="space-y-2 px-1 py-1.5">
-                      {items.map((d) => <NodeChip key={d.type} def={d} />)}
+                      {items.map((d) => <NodeChip key={d.type} def={d} onAdd={addChip} />)}
                     </div>
                   </motion.div>
                 )}
