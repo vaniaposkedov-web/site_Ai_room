@@ -45,7 +45,7 @@ export default function CTA() {
 
             <motion.h2
               initial={{ opacity: 0, y: 18 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: .2 }}
-              className="font-display font-black text-5xl lg:text-7xl text-[#262626] tracking-tight leading-[1.0] mb-6"
+              className="font-display font-black text-4xl sm:text-5xl lg:text-7xl text-[#262626] tracking-tight leading-[1.05] mb-6"
             >
               Карточки, которые<br />продают
             </motion.h2>

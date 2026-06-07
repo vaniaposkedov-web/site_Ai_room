@@ -256,7 +256,7 @@ export default function TryOnSimulator() {
   const centralImg = lastApplied ? ITEMS.find((i) => i.id === lastApplied)!.look : BASE_LOOK
 
   const renderColumn = (ids: string[]) => (
-    <div className="flex flex-col gap-3 sm:gap-5 justify-center">
+    <div className="flex flex-row lg:flex-col gap-3 sm:gap-5 justify-center">
       {ids.map((id) => {
         const item = ITEMS.find((x) => x.id === id)!
         return (
@@ -316,10 +316,10 @@ export default function TryOnSimulator() {
           </motion.p>
         </div>
 
-        {/* Stage: left cards · big photo · right cards */}
+        {/* Stage: left cards · big photo · right cards (mobile: фото сверху, карточки рядами) */}
         <div
           ref={stageRef}
-          className="relative grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6"
+          className="relative flex flex-col items-center gap-4 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-6"
         >
           {/* connection lines — sit BEHIND the photo, plug into its border */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
@@ -362,7 +362,7 @@ export default function TryOnSimulator() {
           {renderColumn(LEFT_IDS)}
 
           {/* CENTER photo (drop target) */}
-          <div className="relative z-10 flex justify-center">
+          <div className="relative z-10 flex justify-center order-first w-full lg:order-none lg:w-auto">
             <div className="relative w-full max-w-[310px]">
               {/* rotating glow halo */}
               <motion.div

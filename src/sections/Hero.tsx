@@ -70,7 +70,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-display font-black text-[26px] sm:text-4xl lg:text-[58px] leading-[1.08] tracking-tight text-white mb-6"
+          className="font-display font-black text-[22px] sm:text-4xl lg:text-[58px] leading-[1.08] tracking-tight text-white mb-6"
         >
           Нейросеть для
           <br />
