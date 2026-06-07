@@ -2,9 +2,7 @@ import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { UploadCloud, Sparkles, RefreshCw } from 'lucide-react'
 import { useWizard } from '../store'
-
-const SYSTEM_PROMPT =
-  'Ты эксперт по маркетплейсам. Проанализируй фото и верни СТРОГО JSON: { "category": "...", "title": "SEO-название (до 60 симв)", "features": ["преимущество1", "преимущество2", "преимущество3"] }. Без markdown.'
+import { analyzeProductImage, hasAIKey } from '@/lib/ai'
 
 function Skeleton() {
   return (
@@ -28,39 +26,14 @@ export default function Step1Upload() {
   const [dragOver, setDragOver] = useState(false)
 
   const analyze = async (dataUrl: string) => {
-    const key = import.meta.env.VITE_OPENAI_API_KEY as string | undefined
-    if (!key) {
-      setToast('Ключ OpenAI не задан — заполните поля вручную')
+    if (!hasAIKey()) {
+      setToast('AI-ключ не задан — заполните поля вручную')
       return
     }
     setLoading(true)
     try {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 0.4,
-          max_tokens: 400,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: 'Проанализируй это фото товара.' },
-                { type: 'image_url', image_url: { url: dataUrl } },
-              ],
-            },
-          ],
-        }),
-      })
-      if (!res.ok) throw new Error(String(res.status))
-      const json = await res.json()
-      const raw = (json.choices?.[0]?.message?.content ?? '').replace(/```json|```/g, '').trim()
-      const parsed = JSON.parse(raw)
-      const features = Array.isArray(parsed.features) ? parsed.features.slice(0, 3) : []
-      while (features.length < 3) features.push('')
-      updateProductData({ category: parsed.category || '', title: parsed.title || '', features })
+      const r = await analyzeProductImage(dataUrl)
+      updateProductData({ category: r.category, title: r.title, features: r.features })
     } catch {
       setToast('Не удалось проанализировать фото — заполните поля вручную')
     } finally {

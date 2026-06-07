@@ -3,6 +3,12 @@ import { motion } from 'framer-motion'
 import { Download, Loader2, Search, ShieldCheck } from 'lucide-react'
 import OverlayCanvas, { DEFAULT_POS, buildItems } from '../OverlayCanvas'
 import { useWizard } from '../store'
+import { analyzeCompetitor, hasAIKey } from '@/lib/ai'
+
+const MOCK_REPORT =
+  'У конкурента нет инфографики. Ваши сгенерированные преимущества выгодно выделяют товар в выдаче и повышают кликабельность карточки.'
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export default function Step4Export() {
   const productData = useWizard((s) => s.productData)
@@ -12,7 +18,7 @@ export default function Step4Export() {
   const [downloading, setDownloading] = useState(false)
   const [url, setUrl] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
-  const [report, setReport] = useState(false)
+  const [report, setReport] = useState<string | null>(null)
 
   const compose = async () => {
     const bg = productData.finalImage || productData.originalImage
@@ -74,13 +80,22 @@ export default function Step4Export() {
     }
   }
 
-  const analyze = () => {
-    setReport(false)
+  const analyze = async () => {
+    setReport(null)
     setAnalyzing(true)
-    setTimeout(() => {
+    try {
+      if (hasAIKey()) {
+        const text = await analyzeCompetitor(url, { title: productData.title, features: productData.features })
+        setReport(text || MOCK_REPORT)
+      } else {
+        await sleep(1500)
+        setReport(MOCK_REPORT)
+      }
+    } catch {
+      setReport(MOCK_REPORT)
+    } finally {
       setAnalyzing(false)
-      setReport(true)
-    }, 2000)
+    }
   }
 
   return (
@@ -138,10 +153,7 @@ export default function Step4Export() {
               <div className="flex items-center gap-2 text-[#4ADE80] font-semibold text-sm mb-2">
                 <ShieldCheck size={16} /> Отчёт
               </div>
-              <p className="text-sm text-white/70 leading-relaxed">
-                У конкурента нет инфографики. Ваши сгенерированные преимущества выгодно выделяют товар
-                в выдаче и повышают кликабельность карточки.
-              </p>
+              <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{report}</p>
             </motion.div>
           )}
         </div>
