@@ -1,77 +1,48 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ReactFlowProvider } from '@xyflow/react'
-import { ArrowLeft, Star, Plus, Sparkles, Loader2, X, PanelLeft, SlidersHorizontal } from 'lucide-react'
-import NodeLibrary from '@/workspace/NodeLibrary'
-import Editor from '@/workspace/Editor'
-import Inspector from '@/workspace/Inspector'
-import Toolbar from '@/workspace/Toolbar'
-import BottomDrawer from '@/workspace/BottomDrawer'
-import { useFlow } from '@/workspace/store'
-import { STAR_TO_RUB } from '@/workspace/types'
+import { Star, Plus, ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react'
+import { useWizard } from '@/workspace/store'
+import Stepper, { STEPS } from '@/workspace/Stepper'
+import Toaster from '@/workspace/Toaster'
+import Step1Upload from '@/workspace/steps/Step1Upload'
+import Step2Studio from '@/workspace/steps/Step2Studio'
+import Step3Editor from '@/workspace/steps/Step3Editor'
+import Step4Export from '@/workspace/steps/Step4Export'
 
-/* плавный «барабан» баланса */
-function useCountUp(value: number, dur = 600) {
-  const [disp, setDisp] = useState(value)
-  const fromRef = useRef(value)
-  useEffect(() => {
-    const from = fromRef.current
-    const to = value
-    if (from === to) return
-    const t0 = performance.now()
-    let raf = 0
-    const tick = (t: number) => {
-      const k = Math.min(1, (t - t0) / dur)
-      const v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))
-      setDisp(v)
-      if (k < 1) raf = requestAnimationFrame(tick)
-      else fromRef.current = to
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [value, dur])
-  return disp
+const TITLES: Record<number, { title: string; sub: string }> = {
+  1: { title: 'Загрузка и AI-разметка', sub: 'Загрузите фото — нейросеть определит категорию, название и преимущества' },
+  2: { title: 'AI-студия', sub: 'Выберите фон — нейросеть пересоберёт сцену вокруг товара' },
+  3: { title: 'Дизайн карточки', sub: 'Разместите инфографику поверх изображения' },
+  4: { title: 'Экспорт и анализ', sub: 'Скачайте карточку и сравните с конкурентом' },
 }
-
-const PACKS = [
-  { stars: 50, bonus: 0 },
-  { stars: 100, bonus: 10 },
-  { stars: 300, bonus: 50 },
-]
 
 export default function Workspace() {
   const [booting, setBooting] = useState(true)
-  const [topup, setTopup] = useState(false)
-  const [libOpen, setLibOpen] = useState(false)
-  const [inspectOpen, setInspectOpen] = useState(false)
-
-  const selectedId = useFlow((s) => s.selectedId)
-  const balance = useFlow((s) => s.balance)
-  const running = useFlow((s) => s.running)
-  const run = useFlow((s) => s.run)
-  const cost = useFlow((s) => s.graphCost())
-  const fileCount = useFlow((s) => s.files.length)
-  const price = cost * Math.max(1, fileCount)
-  const allDone = useFlow((s) => s.nodes.length > 0 && s.nodes.every((n) => n.data.status === 'done'))
-  const dispBalance = useCountUp(balance)
+  const step = useWizard((s) => s.step)
+  const balance = useWizard((s) => s.balance)
+  const productData = useWizard((s) => s.productData)
+  const nextStep = useWizard((s) => s.nextStep)
+  const prevStep = useWizard((s) => s.prevStep)
+  const topUp = useWizard((s) => s.topUp)
 
   useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 1700)
+    const t = setTimeout(() => setBooting(false), 1500)
     return () => clearTimeout(t)
   }, [])
 
-  // на мобильных авто-открываем инспектор при выборе узла
-  useEffect(() => {
-    if (selectedId) { setInspectOpen(true); setLibOpen(false) }
-    else setInspectOpen(false)
-  }, [selectedId])
+  const canNext =
+    step === 1 ? !!productData.originalImage && productData.title.trim().length > 0
+      : step === 2 ? !!productData.finalImage
+        : true
 
-  const canRun = !running && cost > 0 && balance >= price && !allDone
+  const meta = TITLES[step]
 
   return (
-    <div className="h-screen flex flex-col bg-brand-dark text-white overflow-hidden">
-      {/* Boot screen */}
+    <div className="min-h-screen flex flex-col bg-brand-dark text-white">
+      <Toaster />
+
+      {/* Boot */}
       <AnimatePresence>
         {booting && (
           <motion.div
@@ -80,154 +51,99 @@ export default function Workspace() {
             transition={{ duration: 0.5 }}
             className="fixed inset-0 z-[200] bg-brand-dark flex flex-col items-center justify-center gap-6"
           >
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-              className="font-display font-black text-3xl tracking-tight"
-            >
+            <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 1.4, repeat: Infinity }} className="font-display font-black text-3xl tracking-tight">
               AI<span className="text-brand-yellow">ROOM</span>
             </motion.div>
             <div className="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
-              <motion.div className="h-full bg-brand-yellow" initial={{ x: '-100%' }} animate={{ x: '0%' }} transition={{ duration: 1.5, ease: 'easeInOut' }} />
+              <motion.div className="h-full bg-brand-yellow" initial={{ x: '-100%' }} animate={{ x: '0%' }} transition={{ duration: 1.3, ease: 'easeInOut' }} />
             </div>
-            <div className="text-white/40 text-xs tracking-wide">Загружаем рабочую область…</div>
+            <div className="text-white/40 text-xs">Загружаем мастер карточек…</div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Header */}
-      <header className="h-16 flex-shrink-0 flex items-center gap-4 px-4 border-b border-white/[0.07] bg-[#1A1A1A]/80 backdrop-blur-md z-20">
-        <Link to="/" className="font-display font-black text-xl tracking-tight">
-          AI<span className="text-brand-yellow">ROOM</span>
-        </Link>
-        <Link to="/" className="flex items-center gap-1.5 text-sm text-white/45 hover:text-white px-2 py-1.5 rounded-lg transition-colors">
-          <ArrowLeft size={15} /> <span className="hidden sm:inline">На сайт</span>
-        </Link>
+      <header className="flex-shrink-0 border-b border-white/[0.07] bg-[#1A1A1A]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+          <Link to="/" className="font-display font-black text-xl tracking-tight flex-shrink-0">
+            AI<span className="text-brand-yellow">ROOM</span>
+          </Link>
+          <Link to="/" className="hidden sm:flex items-center gap-1.5 text-sm text-white/45 hover:text-white px-2 py-1.5 rounded-lg transition-colors">
+            <ArrowLeft size={15} /> На сайт
+          </Link>
 
-        {/* mobile: open node library */}
-        <button
-          onClick={() => { setLibOpen((v) => !v); setInspectOpen(false) }}
-          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-white/60 hover:text-white"
-          aria-label="Библиотека нодов"
-        >
-          <PanelLeft size={16} />
-        </button>
-
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          {/* balance */}
-          <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl pl-3 pr-1.5 py-1.5">
-            <span className="text-xs text-white/40 hidden sm:inline">Баланс</span>
-            <motion.span
-              key={balance}
-              initial={{ scale: 1.25, color: '#FFFFFF' }}
-              animate={{ scale: 1, color: '#FFE135' }}
-              transition={{ duration: 0.4 }}
-              className="flex items-center gap-1 font-display font-black tabular-nums"
-            >
-              {dispBalance} <Star size={13} fill="currentColor" />
-            </motion.span>
-            <button
-              onClick={() => setTopup(true)}
-              className="flex items-center gap-1 text-xs font-semibold bg-brand-yellow/15 text-brand-yellow border border-brand-yellow/25 rounded-lg px-2 py-1 hover:bg-brand-yellow/25 transition-colors"
-            >
-              <Plus size={12} /> <span className="hidden sm:inline">Пополнить</span>
-            </button>
+          <div className="hidden md:flex flex-1 justify-center">
+            <Stepper />
           </div>
 
-          {/* mobile: open inspector */}
-          <button
-            onClick={() => { setInspectOpen((v) => !v); setLibOpen(false) }}
-            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-white/60 hover:text-white"
-            aria-label="Инспектор"
-          >
-            <SlidersHorizontal size={16} />
-          </button>
+          <div className="ml-auto md:ml-0 flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl pl-3 pr-1.5 py-1.5">
+            <span className="text-xs text-white/40 hidden sm:inline">Баланс</span>
+            <motion.span key={balance} initial={{ scale: 1.25 }} animate={{ scale: 1 }} className="flex items-center gap-1 font-display font-black text-brand-yellow tabular-nums">
+              {balance} <Star size={13} fill="currentColor" />
+            </motion.span>
+            <button onClick={() => topUp(50)} title="Пополнить (демо +50)" className="flex items-center gap-1 text-xs font-semibold bg-brand-yellow/15 text-brand-yellow border border-brand-yellow/25 rounded-lg px-2 py-1 hover:bg-brand-yellow/25 transition-colors">
+              <Plus size={12} />
+            </button>
+          </div>
+        </div>
 
-          {/* generate */}
-          <button
-            onClick={() => run()}
-            disabled={!canRun}
-            className="flex items-center gap-2 font-display font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl bg-brand-yellow text-brand-dark transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {running ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.5} />}
-            {running ? 'Генерация…' : allDone ? (
-              <>
-                <span className="hidden sm:inline">Измените параметры</span>
-                <span className="sm:hidden">Готово</span>
-              </>
-            ) : (
-              <span className="flex items-center gap-1">
-                <span className="hidden sm:inline">Сгенерировать</span>
-                <span className="opacity-70 flex items-center gap-0.5">(от {price} <Star size={11} fill="currentColor" />)</span>
-              </span>
-            )}
-          </button>
+        {/* mobile stepper */}
+        <div className="md:hidden border-t border-white/[0.06] px-4 py-2 overflow-x-auto no-scrollbar">
+          <Stepper />
         </div>
       </header>
 
-      {/* Body: library · (toolbar + canvas + batch) · inspector */}
-      <div className="flex-1 flex min-h-0 relative">
-        <NodeLibrary mobileOpen={libOpen} onClose={() => setLibOpen(false)} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Toolbar />
-          <ReactFlowProvider>
-            <Editor />
-          </ReactFlowProvider>
-          <BottomDrawer />
+      {/* Main */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-6">
+          <h1 className="font-display font-black text-2xl sm:text-3xl text-white">{meta.title}</h1>
+          <p className="text-white/45 text-sm mt-1">{meta.sub}</p>
         </div>
-        <Inspector mobileOpen={inspectOpen} onClose={() => setInspectOpen(false)} />
 
-        {/* mobile backdrop */}
-        {(libOpen || inspectOpen) && (
-          <div
-            className="lg:hidden fixed inset-0 top-16 z-30 bg-black/55"
-            onClick={() => { setLibOpen(false); setInspectOpen(false) }}
-          />
-        )}
-      </div>
-
-      {/* Top-up modal */}
-      <AnimatePresence>
-        {topup && (
+        <AnimatePresence mode="wait">
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            key={step}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setTopup(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.3 }}
-              className="relative w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#1A1A1A] p-7 shadow-2xl"
-            >
-              <button onClick={() => setTopup(false)} className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06]">
-                <X size={17} />
-              </button>
-              <h3 className="font-display font-black text-2xl text-white mb-1">Пополнить баланс</h3>
-              <p className="text-white/40 text-sm mb-5">1 ⭐ = {STAR_TO_RUB} ₽. Списываются только за платные блоки.</p>
-              <div className="space-y-2.5">
-                {PACKS.map((p) => {
-                  const total = p.stars + p.bonus
-                  return (
-                    <button
-                      key={p.stars}
-                      onClick={() => { useFlow.setState((s) => ({ balance: s.balance + total })); setTopup(false) }}
-                      className="w-full flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 hover:border-brand-yellow/40 transition-colors"
-                    >
-                      <span className="flex items-center gap-2 font-display font-bold text-white">
-                        {total} <Star size={14} className="text-brand-yellow" fill="#FFE135" />
-                        {p.bonus > 0 && <span className="text-[11px] text-[#4ADE80]">+{p.bonus} бонус</span>}
-                      </span>
-                      <span className="text-sm text-white/50">{p.stars * STAR_TO_RUB} ₽</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </motion.div>
+            {step === 1 && <Step1Upload />}
+            {step === 2 && <Step2Studio />}
+            {step === 3 && <Step3Editor />}
+            {step === 4 && <Step4Export />}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </main>
+
+      {/* Footer */}
+      <footer className="flex-shrink-0 border-t border-white/[0.07] bg-[#1A1A1A]/80 backdrop-blur-md sticky bottom-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <button
+            onClick={prevStep}
+            disabled={step === 1}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-white/70 hover:text-white hover:border-white/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={16} /> Назад
+          </button>
+
+          <div className="text-[11px] text-white/30">Шаг {step} из {STEPS.length}</div>
+
+          {step < 4 ? (
+            <button
+              onClick={nextStep}
+              disabled={!canNext}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Далее <ArrowRight size={16} />
+            </button>
+          ) : (
+            <Link to="/" className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-white/70 hover:text-white hover:border-white/25 transition-colors">
+              Готово
+            </Link>
+          )}
+        </div>
+      </footer>
     </div>
   )
 }
