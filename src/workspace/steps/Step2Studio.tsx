@@ -203,7 +203,7 @@ export default function Step2Studio() {
 
         {/* generate */}
         <button onClick={generate} disabled={busy}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold disabled:opacity-50 disabled:cursor-not-allowed lg:sticky lg:bottom-4">
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold disabled:opacity-50 disabled:cursor-not-allowed">
           {busy ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
           Сгенерировать <span className="opacity-70">· {g.variants} вар.</span>
           <span className="flex items-center gap-0.5">({cost} <Star size={12} fill="currentColor" />)</span>

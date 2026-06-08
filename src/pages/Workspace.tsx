@@ -95,7 +95,7 @@ export default function Workspace() {
       </header>
 
       {/* Main */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6">
           <h1 className="font-display font-black text-2xl sm:text-3xl text-white">{meta.title}</h1>
           <p className="text-white/45 text-sm mt-1">{meta.sub}</p>
@@ -128,7 +128,7 @@ export default function Workspace() {
             <ChevronLeft size={16} /> Назад
           </button>
 
-          <div className="text-[11px] text-white/30">Шаг {step} из {STEPS.length}</div>
+          <div className="hidden sm:block text-[11px] text-white/30">Шаг {step} из {STEPS.length}</div>
 
           {step < 4 ? (
             <button
