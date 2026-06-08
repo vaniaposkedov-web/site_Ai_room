@@ -1,0 +1,8 @@
+{
+  "name": "Remix: AIROOM",
+  "description": "Полноценная Hero-секция лендинга сервиса AIROOM — ИИ-генератора продающих карточек товаров",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

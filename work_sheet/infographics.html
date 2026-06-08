@@ -1,0 +1,2391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Создание инфографики — AIROOM</title>
+
+  <!-- ШРИФТЫ (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- БИБЛИОТЕКИ -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- ЦВЕТОВАЯ СХЕМА И СТИЛИ -->
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --bg-card: #242424;
+      --bg-card-hover: #2a2a2a;
+      --bg-input: #2e2e2e;
+      --accent: #F5C800;
+      --accent-hover: #e0b400;
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.22);
+      --border: rgba(255,255,255,0.08);
+      --border-focus: rgba(245,200,0,0.5);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    /* Сброс стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      color: var(--text);
+      font-family: 'Onest', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Фоновые деликатные свечения */
+    .glow-spot {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 200, 0, 0.04) 0%, rgba(245, 200, 0, 0) 70%);
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-spot-1 {
+      width: 600px;
+      height: 600px;
+      top: -100px;
+      left: 20%;
+    }
+
+    .glow-spot-2 {
+      width: 500px;
+      height: 500px;
+      bottom: 10%;
+      right: 15%;
+    }
+
+    /* Навигация (Sticky nav) */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: all 0.4s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(28, 28, 28, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      transition: padding 0.4s ease;
+    }
+
+    nav.scrolled .nav-container {
+      padding: 16px 24px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Кнопка назад */
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateX(-2px);
+    }
+
+    .btn-back svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    /* Логотип AIROOM */
+    .logo {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo .logo-ai {
+      color: var(--accent);
+    }
+
+    .logo .logo-room {
+      color: var(--text);
+    }
+
+    /* По центру: ссылки */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      padding: 6px 16px;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    /* Справа: действия */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-login {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'Onest', sans-serif;
+      cursor: pointer;
+      padding: 10px 18px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-login:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #111111;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 10px 22px;
+      font-family: 'Onest', sans-serif;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 200, 0, 0.35);
+      background-color: var(--accent-hover);
+    }
+
+    .btn-start svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Burger Menu */
+    .burger-menu {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 101;
+    }
+
+    .burger-bar {
+      width: 100%;
+      height: 2px;
+      background-color: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+
+    /* Мобильное выпадающее меню */
+    #mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(28,28,28,0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--border);
+      padding: 100px 24px 32px;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 99;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #mobile-menu.open {
+      display: flex;
+    }
+
+    #mobile-menu a {
+      color: var(--text-muted);
+      font-family: 'Onest';
+      font-size: 20px;
+      text-decoration: none;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      width: 100%;
+      text-align: center;
+      transition: color 0.3s ease;
+    }
+
+    #mobile-menu a:hover {
+      color: var(--text);
+    }
+
+    #mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    #mobile-menu .mobile-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    #mobile-menu .mobile-btn-start {
+      background: var(--accent);
+      color: #111;
+      padding: 14px;
+      border-radius: 12px;
+      width: 100%;
+      font-weight: bold;
+      text-align: center;
+      font-family: 'Onest';
+      font-size: 16px;
+    }
+
+    #mobile-menu .mobile-btn-login {
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 12px;
+      width: 100%;
+      font-weight: bold;
+      text-align: center;
+      font-family: 'Onest';
+      font-size: 16px;
+    }
+
+    /* ИНДИКАТОР ШАГОВ */
+    .steps-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      margin-top: 100px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .steps-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      background: rgba(36, 36, 36, 0.5);
+      border: 1px solid var(--border);
+      padding: 12px 28px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s ease;
+      color: var(--text-muted);
+    }
+
+    .step-circle svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .step.active .step-circle {
+      border-color: var(--accent);
+      background: rgba(245, 200, 0, 0.12);
+      color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(245, 200, 0, 0.12);
+    }
+
+    .step.completed .step-circle {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #111;
+    }
+
+    .step-label {
+      font-family: 'Onest', sans-serif;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: color 0.3s ease;
+    }
+
+    .step.active .step-label {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .step.completed .step-label {
+      color: var(--text-muted);
+    }
+
+    .step-line {
+      width: 80px;
+      height: 2px;
+      background: var(--border);
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+      margin-left: 8px;
+      margin-right: 8px;
+    }
+
+    .step-line::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.5s ease;
+    }
+
+    .step-line.filled::after {
+      width: 100%;
+    }
+
+    /* КОНТЕЙНЕРЫ ШАГОВ */
+    .wizard-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .step-pane {
+      display: none;
+    }
+
+    .step-pane.active {
+      display: block;
+    }
+
+    /* ШАГ 1: ЗАГРУЗКА ФОТО */
+    .step-1-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* Большая зона загрузки (до загрузки) */
+    .upload-zone-main {
+      width: 100%;
+      border: 2px dashed rgba(245, 200, 0, 0.3);
+      border-radius: var(--radius);
+      background: rgba(245, 200, 0, 0.02);
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      text-align: center;
+    }
+
+    .upload-zone-main:hover {
+      border-color: rgba(245, 200, 0, 0.6);
+      background: rgba(245, 200, 0, 0.05);
+    }
+
+    .upload-zone-main svg.cloud-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--accent);
+      opacity: 0.7;
+    }
+
+    .upload-zone-main .upload-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .upload-zone-main .upload-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .btn-select-file {
+      background: var(--accent);
+      color: #111;
+      border-radius: var(--radius-sm);
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: 'Onest';
+      pointer-events: none; /* Даем кликнуть по самой родительской зоне */
+    }
+
+    /* Состояние после загрузки: Две зоны */
+    .upload-grid {
+      display: none; /* Переключится на grid */
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .upload-zone-small {
+      border: 2px solid rgba(245, 200, 0, 0.4);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .zone-label-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .zone-label {
+      font-family: 'Onest', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .btn-reset-photo {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Onest';
+      align-self: flex-start;
+      transition: color 0.2s;
+    }
+
+    .btn-reset-photo:hover {
+      color: var(--accent);
+    }
+
+    .status-check-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+
+    .status-check-badge svg {
+      width: 12px;
+      height: 12px;
+      stroke-width: 3;
+    }
+
+    /* Тултип референса */
+    .tooltip-icon {
+      color: var(--text-dim);
+      cursor: help;
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .tooltip-icon:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 100;
+      pointer-events: none;
+      font-family: 'Onest';
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* Правая зона референса пустая */
+    .upload-zone-ref {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 220px;
+      text-align: center;
+    }
+
+    .upload-zone-ref:hover {
+      border-color: rgba(245, 200, 0, 0.4);
+      background: var(--bg-card-hover);
+    }
+
+    .upload-zone-ref svg.add-icon {
+      width: 36px;
+      height: 36px;
+      color: var(--text-dim);
+    }
+
+    .upload-zone-ref .ref-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .upload-zone-ref .ref-badge {
+      font-size: 11px;
+      color: rgba(245, 200, 0, 0.7);
+      background: rgba(245, 200, 0, 0.08);
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+
+    /* Блок кнопок стилей */
+    .style-buttons-container {
+      display: none;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn-style-option {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 22px;
+      color: var(--text-muted);
+      font-family: 'Onest';
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+
+    .btn-style-option:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .btn-style-option.active {
+      border-color: var(--accent);
+      background: rgba(245, 200, 0, 0.08);
+      color: var(--accent);
+    }
+
+    /* БЛОК AI-ОПРЕДЕЛЕНИЯ КАТЕГОРИИ */
+    .ai-category-section {
+      display: none;
+      margin-top: 32px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .ai-sec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .ai-sec-title {
+      font-family: 'Onest';
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Маленький CSS спиннер */
+    .ai-mini-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(245, 200, 0, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .ai-check {
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .ai-check svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .category-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .category-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .category-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'Onest';
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .category-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(245, 200, 0, 0.1);
+    }
+
+    .category-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* КНОПКА ДАЛЕЕ — ШАГ 1 */
+    .action-row-1 {
+      margin-top: 40px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-next {
+      background: var(--accent);
+      color: #111;
+      border-radius: 14px;
+      padding: 16px 36px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: not-allowed;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.35;
+      transition: all 0.3s;
+    }
+
+    .btn-next.enabled {
+      cursor: pointer;
+      opacity: 1;
+    }
+
+    .btn-next.enabled:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(245, 200, 0, 0.4);
+    }
+
+    .btn-next svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+
+    /* ШАГ 2: ПАРАМЕТРЫ ТОВАРА */
+    .step-2-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 120px;
+    }
+
+    /* Бейдж */
+    .section-badge {
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: 11px;
+      letter-spacing: 0.10em;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .section-badge svg {
+      color: var(--accent);
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    .section-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 16px;
+      line-height: 1.2;
+    }
+
+    .section-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    /* Блок параметров */
+    .params-container {
+      margin-top: 32px;
+      position: relative;
+      min-height: 140px;
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .param-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .param-label {
+      font-family: 'Onest', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .param-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'Onest';
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .param-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(245, 200, 0, 0.1);
+    }
+
+    /* БЛОК ТЕКСТА ИНФОГРАФИКИ */
+    .infographic-text-section {
+      margin-top: 36px;
+    }
+
+    .info-sec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .info-sec-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-ai-prompt {
+      background: rgba(245, 200, 0, 0.1);
+      border: 1px solid rgba(245, 200, 0, 0.25);
+      border-radius: 50px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: 'Onest';
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-ai-prompt:hover {
+      background: rgba(245, 200, 0, 0.18);
+      border-color: rgba(245, 200, 0, 0.4);
+    }
+
+    .info-sec-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .textarea-prompt {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      color: var(--text);
+      font-family: 'Onest';
+      font-size: 14px;
+      line-height: 1.7;
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .textarea-prompt:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(245, 200, 0, 0.1);
+    }
+
+    /* БЛОК РАЗРЕШЕНИЕ И ФОРМАТ */
+    .format-resolution-section {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .format-grp, .res-grp {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .grp-label {
+      font-family: 'Onest', sans-serif;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .button-pills-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .format-btn, .quality-btn {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 18px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--bg-input);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .format-btn:hover, .quality-btn:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .format-btn.active, .quality-btn.active {
+      border-color: var(--accent);
+      background: rgba(245, 200, 0, 0.12);
+      color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 200, 0, 0.12);
+    }
+
+    .recommended-badge {
+      display: inline-block;
+      font-family: 'Onest';
+      font-size: 9px;
+      color: var(--accent);
+      background: rgba(245, 200, 0, 0.1);
+      border: 1px solid rgba(245, 200, 0, 0.25);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-weight: bold;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    /* КНОПКИ ШАГ 2 */
+    .action-row-2 {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 48px;
+      gap: 12px;
+    }
+
+    .btn-step-back {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 28px;
+      color: var(--text-muted);
+      background: transparent;
+      font-family: 'Onest';
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-step-back:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .btn-generate {
+      background: var(--accent);
+      color: #111;
+      border-radius: 14px;
+      padding: 16px 40px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(245, 200, 0, 0.45);
+    }
+
+    .btn-generate svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+
+    /* ЭКРАН ЗАГРУЗКИ КЛИКА */
+    .loading-pane {
+      display: none; /* Переключится на flex */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 400px;
+      padding: 40px 24px;
+      z-index: 200;
+    }
+
+    .loading-icon-container {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .loading-pulse-sparkle {
+      width: 64px;
+      height: 64px;
+      color: var(--accent);
+      animation: spin-pulse 2s linear infinite;
+    }
+
+    @keyframes spin-pulse {
+      0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+      50% { transform: scale(1.15) rotate(180deg); opacity: 1; color: var(--accent-hover); }
+      100% { transform: scale(1) rotate(360deg); opacity: 0.8; }
+    }
+
+    .loading-title {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    /* Прогресс-бар */
+    .loading-progress-container {
+      width: 280px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .loading-progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+    }
+
+    .loader-status-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      min-height: 24px;
+    }
+
+
+    /* ШАГ 3: РЕЗУЛЬТАТ */
+    .step-3-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    .ready-banner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    /* Результирующее фото */
+    .result-photo-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3/4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Плейсхолдер градиент со смещением */
+    .result-gradient-placeholder {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 50%, #2a2a2a 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 4s ease infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .result-placeholder-content {
+      text-align: center;
+      padding: 24px;
+      z-index: 2;
+    }
+
+    .result-placeholder-content svg {
+      width: 52px;
+      height: 52px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .result-placeholder-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .result-placeholder-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* Лейбл AI STUDIO */
+    .ai-studio-watermark {
+      background: rgba(245, 200, 0, 0.15);
+      border: 1px solid rgba(245, 200, 0, 0.25);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      font-family: 'Onest';
+      border-radius: 8px;
+      padding: 6px 12px;
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .ai-studio-watermark svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    /* БЛОК ОЦЕНКИ */
+    .feedback-section {
+      margin-top: 32px;
+      text-align: center;
+    }
+
+    .feedback-title {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .feedback-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .btn-feedback-option {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 28px;
+      color: var(--text-muted);
+      background: transparent;
+      font-family: 'Onest';
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+
+    .btn-feedback-option:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .btn-feedback-option.active-like {
+      background: rgba(245, 200, 0, 0.12);
+      border-color: rgba(245, 200, 0, 0.35);
+      color: var(--accent);
+    }
+
+    .btn-feedback-option svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* БЛОК ДЕЙСТВИЙ */
+    .actions-grid-step3 {
+      margin-top: 32px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-download-result {
+      background: var(--accent);
+      color: #111;
+      border-radius: 14px;
+      padding: 14px 32px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn-download-result:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(245, 200, 0, 0.4);
+    }
+
+    .btn-secondary-action {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 24px;
+      color: var(--text-muted);
+      background: transparent;
+      font-family: 'Onest';
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-secondary-action:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .btn-restart-action {
+      border: 1px solid rgba(245, 200, 0, 0.3);
+      border-radius: 14px;
+      padding: 14px 24px;
+      color: var(--accent);
+      background: transparent;
+      font-family: 'Onest';
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-restart-action:hover {
+      background: rgba(245, 200, 0, 0.05);
+      border-color: var(--accent);
+    }
+
+
+    /* TOAST-УВЕДОМЛЕНИЯ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #242424;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Onest', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: 1100;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-icon {
+      color: var(--accent);
+      display: inline-flex;
+    }
+
+    .toast-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+
+    /* SKELETON LOADER */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease infinite;
+      border-radius: 8px;
+    }
+
+    .skeleton-label {
+      height: 12px;
+      width: 50%;
+      margin-bottom: 8px;
+    }
+
+    .skeleton-input {
+      height: 44px;
+      width: 100%;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+
+    /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+    @media (max-width: 768px) {
+      .nav-links, .nav-actions {
+        display: none;
+      }
+
+      .burger-menu {
+        display: flex;
+      }
+
+      .steps-indicator {
+        padding: 10px 18px;
+      }
+
+      .step-line {
+        width: 40px;
+      }
+
+      .step-label {
+        font-size: 10px;
+      }
+
+      .upload-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .category-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .params-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .button-pills-row {
+        gap: 8px;
+      }
+
+      .format-btn, .quality-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+
+      .actions-grid-step3 {
+        flex-direction: column;
+      }
+
+      .btn-download-result, .btn-secondary-action, .btn-restart-action {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Бэкграунд свечения -->
+  <div class="glow-spot glow-spot-1"></div>
+  <div class="glow-spot glow-spot-2"></div>
+
+  <!-- Навигация -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="/select.html" class="btn-back" aria-label="Назад к инструментам">
+          <i data-lucide="arrow-left"></i>Назад
+        </a>
+        <a href="/" class="logo">
+          <span class="logo-ai">AI</span><span class="logo-room">ROOM</span>
+        </a>
+      </div>
+
+      <!-- Links -->
+      <div class="nav-links">
+        <a href="/#how" class="nav-link">Как это работает</a>
+        <a href="/#examples" class="nav-link">Примеры</a>
+        <a href="/#pricing" class="nav-link">Тарифы</a>
+        <a href="/#faq" class="nav-link">Вопросы</a>
+      </div>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+        <button class="btn-login" type="button">Войти</button>
+        <button class="btn-start" type="button" onclick="location.reload();">
+          <i data-lucide="sparkles"></i>Начать проект
+        </button>
+      </div>
+
+      <!-- Burger -->
+      <button class="burger-menu" id="burger" aria-label="Открыть мобильное меню" type="button">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Мобильное меню -->
+  <div id="mobile-menu">
+    <a href="/#how">Как это работает</a>
+    <a href="/#examples">Примеры</a>
+    <a href="/#pricing">Тарифы</a>
+    <a href="/#faq">Вопросы</a>
+    
+    <div class="mobile-actions">
+      <a href="#login" class="mobile-btn-login">Войти</a>
+      <a href="#" class="mobile-btn-start" onclick="location.reload();">
+        <i data-lucide="sparkles"></i>Начать проект
+      </a>
+    </div>
+  </div>
+
+  <!-- ИНДИКАТОР ШАГОВ -->
+  <div class="steps-container">
+    <div class="steps-indicator">
+      <!-- Step 1 -->
+      <div class="step active" data-step="1">
+        <div class="step-circle"><i data-lucide="upload"></i></div>
+        <span class="step-label">Фото товара</span>
+      </div>
+      <div class="step-line" id="line-1"></div>
+      
+      <!-- Step 2 -->
+      <div class="step" data-step="2">
+        <div class="step-circle"><i data-lucide="sliders"></i></div>
+        <span class="step-label">Параметры</span>
+      </div>
+      <div class="step-line" id="line-2"></div>
+      
+      <!-- Step 3 -->
+      <div class="step" data-step="3">
+        <div class="step-circle"><i data-lucide="image"></i></div>
+        <span class="step-label">Результат</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- МАСТЕР (ШАГИ) -->
+  <div class="wizard-container">
+    
+    <!-- ==================== ШАГ 1 ==================== -->
+    <div id="step-1-content" class="step-pane active">
+      <div class="step-1-inner">
+        
+        <!-- Одиночная зона до загрузки -->
+        <div class="upload-zone-main" id="upload-main">
+          <i data-lucide="upload-cloud" class="cloud-icon"></i>
+          <p class="upload-title">Загрузите фото товара</p>
+          <p class="upload-subtitle">JPG, PNG, WEBP · до 20 МБ</p>
+          <button class="btn-select-file" type="button">Выбрать файл</button>
+          <input type="file" id="upload-product" accept="image/*" style="display: none;">
+        </div>
+
+        <!-- Сетка после загрузки -->
+        <div class="upload-grid" id="upload-grid">
+          
+          <!-- Левая зона — Загруженное фото товара -->
+          <div class="upload-zone-small">
+            <div class="zone-label-row">
+              <span class="zone-label">Фото товара</span>
+            </div>
+            <img id="product-preview" class="preview-img" alt="Фото товара">
+            <button class="btn-reset-photo" id="btn-reset-product" type="button">Сбросить</button>
+            <div class="status-check-badge">
+              <i data-lucide="check"></i>
+            </div>
+          </div>
+
+          <!-- Правая зона — Референс (пустая) -->
+          <div class="upload-zone-ref" id="ref-zone-empty">
+            <div class="zone-label-row" style="align-self: flex-start;">
+              <span class="zone-label">Дизайн-референс</span>
+              <span class="tooltip-icon" data-tooltip="Загрузите пример карточки, которая вам нравится"><i data-lucide="help-circle" style="width: 14px; height: 14px;"></i></span>
+            </div>
+            <i data-lucide="image-plus" class="add-icon"></i>
+            <span class="ref-text">Добавить референс</span>
+            <span class="ref-badge">Обязательно</span>
+            <input type="file" id="upload-ref" accept="image/*" style="display: none;">
+          </div>
+
+          <!-- Правая зона — Референс (загруженная) -->
+          <div class="upload-zone-small" id="ref-zone-filled" style="display: none;">
+            <div class="zone-label-row">
+              <span class="zone-label">Дизайн-референс</span>
+            </div>
+            <img id="ref-preview" class="preview-img" alt="Референс">
+            <button class="btn-reset-photo" id="btn-reset-ref" type="button">Сбросить</button>
+            <div class="status-check-badge">
+              <i data-lucide="check"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Кнопки пресетов стилей -->
+        <div class="style-buttons-container" id="style-buttons">
+          <button class="btn-style-option" id="btn-copy" type="button">
+            <i data-lucide="copy"></i> Копировать стиль
+          </button>
+          <button class="btn-style-option active" id="btn-inspire" type="button">
+            <i data-lucide="sparkles"></i> Вдохновиться
+          </button>
+        </div>
+
+        <!-- AI Блок автоопределения -->
+        <div class="ai-category-section" id="ai-category-block">
+          <div class="ai-sec-header">
+            <div class="ai-sec-title">
+              <span class="ai-mini-spinner" id="ai-spinner"></span>
+              <span class="ai-check" id="ai-check" style="display: none;"><i data-lucide="check"></i></span>
+              AI определил товар
+            </div>
+          </div>
+
+          <div class="category-grid">
+            <div class="category-field">
+              <label class="category-label">Категория товара</label>
+              <input type="text" class="category-input" id="input-category" placeholder="Определяем...">
+            </div>
+            <div class="category-field">
+              <label class="category-label">Тип товара</label>
+              <input type="text" class="category-input" id="input-type" placeholder="Определяем...">
+            </div>
+          </div>
+          <p class="category-hint">AI определил категорию автоматически — вы можете отредактировать</p>
+        </div>
+
+        <!-- Кнопка Далее -->
+        <div class="action-row-1">
+          <button class="btn-next" id="btn-next-1" type="button" disabled>
+            Далее — Параметры <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==================== ШАГ 2 ==================== -->
+    <div id="step-2-content" class="step-pane">
+      <div class="step-2-inner">
+        
+        <!-- Бейдж -->
+        <span class="section-badge"><i data-lucide="cpu"></i> AI АНАЛИЗИРУЕТ ТОВАР</span>
+        <h2 class="section-title">Параметры товара</h2>
+        <p class="section-subtitle">AI определил детали — проверьте и отредактируйте при необходимости</p>
+
+        <!-- Блок параметров (здесь будут поля) -->
+        <div class="params-container" id="params-container">
+          <!-- Сюда вставится скелетон loader и затем реальные поля из JS -->
+        </div>
+
+        <!-- Инфографика текст -->
+        <div class="infographic-text-section">
+          <div class="info-sec-header">
+            <span class="info-sec-title">О чём рассказать на карточке</span>
+            <button class="btn-ai-prompt" id="btn-ai-idea" type="button">
+              <i data-lucide="sparkles"></i> ✦ AI идея
+            </button>
+          </div>
+          <p class="info-sec-subtitle">Напишите в свободной форме, какой текст хотите видеть на карточке (преимущества или качества товара)</p>
+          <textarea class="textarea-prompt" id="infographic-text" placeholder="Например:
+• Водонепроницаемый материал
+• Высокая прочность
+• Регулируемые застёжки"></textarea>
+        </div>
+
+        <!-- Выбор разрешения и формата -->
+        <div class="format-resolution-section">
+          
+          <!-- Формат -->
+          <div class="format-grp">
+            <span class="grp-label">Формат кадра</span>
+            <div class="button-pills-row">
+              <button class="format-btn" type="button" data-format="9:16">9:16</button>
+              <button class="format-btn active" type="button" data-format="3:4">3:4</button>
+              <button class="format-btn" type="button" data-format="1:1">1:1</button>
+              <button class="format-btn" type="button" data-format="4:3">4:3</button>
+              <button class="format-btn" type="button" data-format="4:5">4:5</button>
+              <button class="format-btn" type="button" data-format="16:9">16:9</button>
+            </div>
+          </div>
+
+          <!-- Разрешение -->
+          <div class="res-grp">
+            <span class="grp-label">Разрешение</span>
+            <div class="button-pills-row">
+              <button class="quality-btn" type="button" data-res="1k">1К</button>
+              <button class="quality-btn active" type="button" data-res="2k">
+                2К<span class="recommended-badge">Рекомендуется</span>
+              </button>
+              <button class="quality-btn" type="button" data-res="4k">4К</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="action-row-2">
+          <button class="btn-step-back" id="btn-back-2" type="button">
+            <i data-lucide="arrow-left"></i> Назад
+          </button>
+          <button class="btn-generate" id="btn-generate" type="button">
+            Сгенерировать <i data-lucide="sparkles"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==================== ЭКРАН ЗАГРУЗКИ (БЕЗ ПЕРЕЗАГРУЗКИ) ==================== -->
+    <div id="loading-screen" class="loading-pane">
+      <div class="loading-icon-container">
+        <i data-lucide="sparkles" class="loading-pulse-sparkle"></i>
+      </div>
+      <h3 class="loading-title">Генерируем вашу инфографику...</h3>
+      
+      <div class="loading-progress-container">
+        <div class="loading-progress-fill" id="progress-fill"></div>
+      </div>
+      
+      <div class="loader-status-text" id="loader-message">Анализируем параметры товара...</div>
+    </div>
+
+
+    <!-- ==================== ШАГ 3 ==================== -->
+    <div id="step-3-content" class="step-pane">
+      <div class="step-3-inner">
+        
+        <div class="ready-banner">
+          <span class="section-badge" style="border-color: rgba(245,200,0,0.3); background: rgba(245,200,0,0.06); color: var(--accent);">
+            ✦ ГОТОВО
+          </span>
+          <h2 class="section-title">Ваша инфографика готова</h2>
+        </div>
+
+        <!-- Карточка с результатом -->
+        <div class="result-photo-block">
+          <div class="ai-studio-watermark">
+            <i data-lucide="sparkles"></i>AI STUDIO
+          </div>
+          
+          <div class="result-gradient-placeholder" id="placeholder-anim">
+            <div class="result-placeholder-content">
+              <i data-lucide="image"></i>
+              <p class="result-placeholder-title">Результат Gemini появится здесь</p>
+              <p class="result-placeholder-desc">Ваш товар успешно объединён с инфографикой по выбранным параметрам</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Блок оценки результата -->
+        <div class="feedback-section">
+          <span class="feedback-title">Как вам результат?</span>
+          <div class="feedback-buttons">
+            <button class="btn-feedback-option" id="btn-like" type="button">
+              <i data-lucide="thumbs-up"></i> Отлично
+            </button>
+            <button class="btn-feedback-option" id="btn-dislike" type="button">
+              <i data-lucide="thumbs-down"></i> Переделать
+            </button>
+          </div>
+        </div>
+
+        <!-- Конечные действия -->
+        <div class="actions-grid-step3">
+          <button class="btn-download-result" id="btn-download" type="button">
+            <i data-lucide="download"></i> Скачать карточку
+          </button>
+          <button class="btn-secondary-action" id="btn-share" type="button">
+            <i data-lucide="share-2"></i> Поделиться
+          </button>
+          <button class="btn-restart-action" id="btn-again" type="button">
+            <i data-lucide="refresh-cw"></i> Создать ещё
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOAST УВЕДОМЛЕНИЕ -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon-wrapper">
+      <i data-lucide="check"></i>
+    </span>
+    <span class="toast-text">Действие выполнено</span>
+  </div>
+
+
+  <!-- ФИНАЛЬНЫЙ JS-БЛОК -->
+  <script>
+    // Инициализация Lucide иконок
+    lucide.createIcons();
+
+    // Инициализация AOS анимаций
+    AOS.init({ duration: 680, once: true, offset: 40 });
+
+    // Sticky nav при скролле
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Мобильное меню бургер
+    const burger = document.getElementById('burger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    burger.addEventListener('click', () => {
+      burger.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
+      if (mobileMenu.classList.contains('open')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Бургер меню ссылки закрытие
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        burger.classList.remove('active');
+        mobileMenu.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+
+
+    // ==================== ЛОГИКА ЗАГРУЗКИ ФОТО (ШАГ 1) ====================
+    const uploadMain = document.getElementById('upload-main');
+    const inputProduct = document.getElementById('upload-product');
+    const inputRef = document.getElementById('upload-ref');
+    const uploadGrid = document.getElementById('upload-grid');
+    const productPreview = document.getElementById('product-preview');
+    const refPreview = document.getElementById('ref-preview');
+    const styleButtons = document.getElementById('style-buttons');
+    const aiCategoryBlock = document.getElementById('ai-category-block');
+    const btnNext1 = document.getElementById('btn-next-1');
+
+    // Клик по большой зоне
+    uploadMain.addEventListener('click', () => {
+      inputProduct.click();
+    });
+
+    // Клик по правой пустой зоне референса
+    document.getElementById('ref-zone-empty').addEventListener('click', () => {
+      inputRef.click();
+    });
+
+    // Обработка загрузки основного фото товара
+    inputProduct.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        showUploadedPhotoState(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function showUploadedPhotoState(src) {
+      // Плавный переход от одной зоны к двум
+      gsap.to(uploadMain, { opacity: 0, y: -10, duration: 0.3, onComplete: () => {
+        uploadMain.style.display = 'none';
+        uploadGrid.style.display = 'grid';
+        productPreview.src = src;
+        gsap.from(uploadGrid, { opacity: 0, y: 16, duration: 0.5 });
+        
+        // Магический AI-анализ категории через 1.2s
+        setTimeout(startAIAnalysisNotification, 1200);
+      }});
+    }
+
+    // Обработка загрузки референса
+    inputRef.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.getElementById('ref-zone-empty').style.display = 'none';
+        document.getElementById('ref-zone-filled').style.display = 'flex';
+        refPreview.src = ev.target.result;
+        gsap.from('#ref-zone-filled', { opacity: 0, scale: 0.96, duration: 0.4 });
+        checkStep1Completion();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Сбросить продукт
+    document.getElementById('btn-reset-product').addEventListener('click', (e) => {
+      e.stopPropagation();
+      inputProduct.value = '';
+      productPreview.src = '';
+      uploadGrid.style.display = 'none';
+      styleButtons.style.display = 'none';
+      aiCategoryBlock.style.display = 'none';
+      uploadMain.style.display = 'flex';
+      gsap.from(uploadMain, { opacity: 0, y: 10, duration: 0.4 });
+      checkStep1Completion();
+    });
+
+    // Сбросить референс
+    document.getElementById('btn-reset-ref').addEventListener('click', (e) => {
+      e.stopPropagation();
+      inputRef.value = '';
+      refPreview.src = '';
+      document.getElementById('ref-zone-filled').style.display = 'none';
+      document.getElementById('ref-zone-empty').style.display = 'flex';
+      gsap.from('#ref-zone-empty', { opacity: 0, scale: 0.96, duration: 0.4 });
+      checkStep1Completion();
+    });
+
+    function checkStep1Completion() {
+      const hasProduct = productPreview.src !== '' && productPreview.src.includes('data:image');
+      const hasRef = refPreview.src !== '' && refPreview.src.includes('data:image');
+      
+      if (hasProduct && hasRef) {
+        styleButtons.style.display = 'flex';
+        gsap.from(styleButtons, { opacity: 0, y: 10, duration: 0.3 });
+        
+        btnNext1.disabled = false;
+        btnNext1.classList.add('enabled');
+      } else {
+        btnNext1.disabled = true;
+        btnNext1.classList.remove('enabled');
+      }
+    }
+
+    // Кнопки типа Стилизация (Копировать vs Вдохновение)
+    const btnCopy = document.getElementById('btn-copy');
+    const btnInspire = document.getElementById('btn-inspire');
+
+    btnCopy.addEventListener('click', () => {
+      btnCopy.classList.add('active');
+      btnInspire.classList.remove('active');
+    });
+
+    btnInspire.addEventListener('click', () => {
+      btnInspire.classList.add('active');
+      btnCopy.classList.remove('active');
+    });
+
+
+    // AI Какое предсказание товара
+    const itemCategories = [
+      { cat: 'Женская одежда', type: 'Женское платье', code: 'clothing' },
+      { cat: 'Мужская одежда', type: 'Мужские брюки', code: 'clothing' },
+      { cat: 'Электроника', type: 'Беспроводные наушники', code: 'electronics' },
+      { cat: 'Спортивные товары', type: 'Спортивная куртка', code: 'clothing' },
+      { cat: 'Товары для дома', type: 'Настольная лампа', code: 'home' }
+    ];
+
+    function startAIAnalysisNotification() {
+      aiCategoryBlock.style.display = 'block';
+      gsap.from(aiCategoryBlock, { opacity: 0, y: 16, duration: 0.5 });
+      const spinner = document.getElementById('ai-spinner');
+      const checkIcon = document.getElementById('ai-check');
+      spinner.style.display = 'inline-block';
+      checkIcon.style.display = 'none';
+
+      // Выбираем случайную категорию
+      const picked = itemCategories[Math.floor(Math.random() * itemCategories.length)];
+      
+      setTimeout(() => {
+        spinner.style.display = 'none';
+        checkIcon.style.display = 'inline-flex';
+        
+        document.getElementById('input-category').value = picked.cat;
+        document.getElementById('input-type').value = picked.type;
+        window.detectedCategoryType = picked.code;
+
+        gsap.from([document.getElementById('input-category'), document.getElementById('input-type')], {
+          opacity: 0,
+          y: 8,
+          duration: 0.4,
+          stagger: 0.1
+        });
+        showToast('AI распознал товар успешно!', 'sparkles');
+      }, 1300);
+    }
+
+
+    // ==================== ПЕРЕХОД К ШАГУ 2 ====================
+    btnNext1.addEventListener('click', () => {
+      if (btnNext1.disabled) return;
+      
+      // Сворачиваем шаг 1, открываем шаг 2
+      gsap.to('#step-1-content', { x: -60, opacity: 0, duration: 0.4, onComplete: () => {
+        document.getElementById('step-1-content').style.display = 'none';
+        document.getElementById('step-2-content').style.display = 'block';
+        updateStepIndicatorUI(2);
+        
+        gsap.from('#step-2-content', { x: 60, opacity: 0, duration: 0.45 });
+        loadStep2DynamicParams();
+      }});
+    });
+
+
+    // ==================== ЛОГИКА ШАГА 2 (ПАРАМЕТРЫ) ====================
+    const paramsContainer = document.getElementById('params-container');
+    
+    // Пресеты параметров
+    const specsLibrary = {
+      clothing: [
+        { label: 'Тип кроя', value: 'Приталенный' },
+        { label: 'Длина изделия', value: 'Миди (до колена)' },
+        { label: 'Тип рукава', value: 'Длинный' },
+        { label: 'Длина рукава', value: 'До запястья' },
+        { label: 'Тип выреза', value: 'V-образный' },
+        { label: 'Посадка', value: 'Высокая' },
+        { label: 'Материал', value: '100% полиэстер' },
+        { label: 'Застёжка', value: 'Молния сзади' },
+        { label: 'Сезон', value: 'Демисезон' }
+      ],
+      electronics: [
+        { label: 'Тип устройства', value: 'Беспроводные наушники' },
+        { label: 'Форм-фактор', value: 'Накладные' },
+        { label: 'Подключение', value: 'Bluetooth 5.3' },
+        { label: 'Цвет', value: 'Чёрный матовый' },
+        { label: 'Материал корпуса', value: 'Пластик + металл' },
+        { label: 'Вес', value: '280 г' },
+        { label: 'Шумоподавление', value: 'Активное (ANC)' },
+        { label: 'Автономия', value: 'До 30 часов' }
+      ],
+      home: [
+        { label: 'Материал', value: 'МДФ + шпон дуба' },
+        { label: 'Размеры (ДхШхВ)', value: '120 × 60 × 75 см' },
+        { label: 'Цвет', value: 'Натуральный дуб' },
+        { label: 'Стиль', value: 'Скандинавский' },
+        { label: 'Вес изделия', value: '18 кг' },
+        { label: 'Покрытие', value: 'Лаковое защитное' }
+      ]
+    };
+
+    function loadStep2DynamicParams() {
+      // Сначала skeleton
+      paramsContainer.innerHTML = buildParamSkeleton();
+      
+      const categoryType = window.detectedCategoryType || 'clothing';
+      
+      // Имитируем погрузку за 800ms
+      setTimeout(() => {
+        let itemsHtml = '<div class="params-grid">';
+        const specs = specsLibrary[categoryType];
+        
+        specs.forEach((field, idx) => {
+          itemsHtml += `
+            <div class="param-field" data-aos="fade-up" data-aos-delay="${idx * 60}">
+              <label class="param-label">${field.label}</label>
+              <input type="text" class="param-input" value="${field.value}">
+            </div>
+          `;
+        });
+        itemsHtml += '</div>';
+        
+        paramsContainer.innerHTML = itemsHtml;
+        lucide.createIcons();
+        AOS.init({ duration: 600, once: true });
+      }, 800);
+    }
+
+    function buildParamSkeleton() {
+      let templ = '<div class="params-grid">';
+      for (let i = 0; i < 6; i++) {
+        templ += `
+          <div class="param-field">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton skeleton-input"></div>
+          </div>
+        `;
+      }
+      templ += '</div>';
+      return templ;
+    }
+
+    // AI идея генерации слогана/текста инфографики
+    const aiIdeaTemplates = [
+      "✦ Натуральная ткань\n✦ Лёгкая и дышащая структура\n✦ Размеры от 40 до 52 в наличии\n✦ Бережная машинная стирка",
+      "✦ До 30 часов автономной работы\n✦ Активное шумоподавление нового поколения\n✦ Складная эргономичная конструкция\n✦ Мгновенное сопряжение iOS & Android",
+      "✦ Массив экологичного дуба\n✦ Выдерживает до 80 кг статической нагрузки\n✦ Уникальное гипоаллергенное покрытие\n✦ Легкая и быстрая сборка за 20 минут"
+    ];
+
+    document.getElementById('btn-ai-idea').addEventListener('click', () => {
+      const area = document.getElementById('infographic-text');
+      const randomPrompt = aiIdeaTemplates[Math.floor(Math.random() * aiIdeaTemplates.length)];
+      area.value = randomPrompt;
+      gsap.from(area, { opacity: 0.4, duration: 0.3 });
+      showToast('AI предложил стильный текст преимуществ', 'sparkles');
+    });
+
+    // Выбор формата кадра
+    document.querySelectorAll('.format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Выбор разрешения
+    document.querySelectorAll('.quality-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Назад к шагу 1
+    document.getElementById('btn-back-2').addEventListener('click', () => {
+      gsap.to('#step-2-content', { x: 60, opacity: 0, duration: 0.4, onComplete: () => {
+        document.getElementById('step-2-content').style.display = 'none';
+        document.getElementById('step-1-content').style.display = 'block';
+        updateStepIndicatorUI(1);
+        gsap.from('#step-1-content', { x: -60, opacity: 0, duration: 0.45 });
+      }});
+    });
+
+
+    // ==================== ЗАПУСК ГЕНЕРАЦИИ (ПЕРЕХОД К ЗАГРУЗКЕ) ====================
+    document.getElementById('btn-generate').addEventListener('click', () => {
+      gsap.to('#step-2-content', { x: -60, opacity: 0, duration: 0.4, onComplete: () => {
+        document.getElementById('step-2-content').style.display = 'none';
+        
+        // Показываем загрузку
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.display = 'flex';
+        gsap.from(loadingScreen, { opacity: 0, duration: 0.4 });
+        
+        runVisualGenerationSequence();
+      }});
+    });
+
+    function runVisualGenerationSequence() {
+      const loaderMessages = [
+        'Анализируем композицию и параметры товара...',
+        'Масштабируем и выравниваем студийный свет...',
+        'Подбираем гармоничную палитру под референс...',
+        'Генерируем уникальные виджеты инфографики...',
+        'Финальное улучшение детализации с помощью AI...'
+      ];
+      
+      const msgLabel = document.getElementById('loader-message');
+      const progressFill = document.getElementById('progress-fill');
+      
+      let msgIndex = 0;
+      const statusInterval = setInterval(() => {
+        if (msgIndex < loaderMessages.length) {
+          msgLabel.textContent = loaderMessages[msgIndex++];
+        }
+      }, 600);
+      
+      // Анимация прогресса за 3 секунды
+      progressFill.style.width = '0%';
+      gsap.to(progressFill, { width: '100%', duration: 3.0, ease: 'sine.inOut' });
+      
+      setTimeout(() => {
+        clearInterval(statusInterval);
+        
+        // Скрываем загрузку
+        document.getElementById('loading-screen').style.display = 'none';
+        
+        // Показываем Шаг 3
+        const step3 = document.getElementById('step-3-content');
+        step3.style.display = 'block';
+        updateStepIndicatorUI(3);
+        
+        gsap.from(step3, { opacity: 0, y: 30, duration: 0.6, onComplete: () => {
+          showToast('Инфографика успешно сгенерирована!', 'sparkles');
+        }});
+      }, 3200);
+    }
+
+
+    // ==================== ОЦЕНКА РЕЗУЛЬТАТА (ШАГ 3) ====================
+    const btnLike = document.getElementById('btn-like');
+    const btnDislike = document.getElementById('btn-dislike');
+
+    btnLike.addEventListener('click', () => {
+      btnLike.classList.add('active-like');
+      btnDislike.classList.remove('active-like');
+      showToast('Спасибо за вашу оценку!', 'heart');
+    });
+
+    btnDislike.addEventListener('click', () => {
+      btnLike.classList.remove('active-like');
+      showToast('Генерируем новый дизайн...', 'refresh-cw');
+      
+      // Запускаем перегенерацию
+      document.getElementById('step-3-content').style.display = 'none';
+      document.getElementById('progress-fill').style.width = '0%';
+      document.getElementById('loading-screen').style.display = 'flex';
+      
+      runVisualGenerationSequence();
+    });
+
+    // Начать сначала
+    document.getElementById('btn-again').addEventListener('click', () => {
+      // Сброс всех инпутов и визуальных состояний
+      inputProduct.value = '';
+      inputRef.value = '';
+      productPreview.src = '';
+      refPreview.src = '';
+      
+      document.getElementById('ref-zone-filled').style.display = 'none';
+      document.getElementById('ref-zone-empty').style.display = 'flex';
+      uploadGrid.style.display = 'none';
+      styleButtons.style.display = 'none';
+      aiCategoryBlock.style.display = 'none';
+      uploadMain.style.display = 'flex';
+      btnNext1.disabled = true;
+      btnNext1.classList.remove('enabled');
+      btnLike.classList.remove('active-like');
+      
+      // Возврат к шагу 1
+      document.getElementById('step-3-content').style.display = 'none';
+      document.getElementById('step-1-content').style.display = 'block';
+      updateStepIndicatorUI(1);
+      
+      gsap.from('#step-1-content', { opacity: 0, y: 15, duration: 0.5 });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+
+    // ==================== ОБНОВЛЕНИЕ ШАГОВ (ИНДИКАТОРЫ) ====================
+    function updateStepIndicatorUI(activeIndex) {
+      document.querySelectorAll('.step').forEach((el, index) => {
+        const stepNum = index + 1;
+        el.classList.remove('active', 'completed');
+        
+        if (stepNum === activeIndex) {
+          el.classList.add('active');
+        } else if (stepNum < activeIndex) {
+          el.classList.add('completed');
+        }
+      });
+
+      // Корректируем соединяющие линии
+      const line1 = document.getElementById('line-1');
+      const line2 = document.getElementById('line-2');
+
+      if (activeIndex === 1) {
+        line1.classList.remove('filled');
+        line2.classList.remove('filled');
+      } else if (activeIndex === 2) {
+        line1.classList.add('filled');
+        line2.classList.remove('filled');
+      } else if (activeIndex === 3) {
+        line1.classList.add('filled');
+        line2.classList.add('filled');
+      }
+
+      // Возвращаем иконки и значки галочки в зависимости от завершенности
+      document.querySelectorAll('.step').forEach((el, index) => {
+        const iconContainer = el.querySelector('.step-circle');
+        const stepNum = index + 1;
+        
+        if (el.classList.contains('completed')) {
+          iconContainer.innerHTML = '<i data-lucide="check"></i>';
+        } else {
+          if (stepNum === 1) iconContainer.innerHTML = '<i data-lucide="upload"></i>';
+          if (stepNum === 2) iconContainer.innerHTML = '<i data-lucide="sliders"></i>';
+          if (stepNum === 3) iconContainer.innerHTML = '<i data-lucide="image"></i>';
+        }
+      });
+
+      lucide.createIcons();
+    }
+
+
+    // ==================== TOAST NOTIFICATION UTILITIES ====================
+    function showToast(message, iconName = 'check') {
+      const toast = document.getElementById('toast');
+      const textSpan = toast.querySelector('.toast-text');
+      const iconWrapper = document.getElementById('toast-icon-wrapper');
+      
+      textSpan.textContent = message;
+      iconWrapper.innerHTML = `<i data-lucide="${iconName}"></i>`;
+      lucide.createIcons();
+
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // Скачивание и копирование ссылок (симуляция)
+    document.getElementById('btn-download').addEventListener('click', () => {
+      showToast('Карточка успешно скачана на устройство', 'download');
+    });
+
+    document.getElementById('btn-share').addEventListener('click', () => {
+      showToast('Ссылка на результат скопирована!', 'link-2');
+    });
+  </script>
+</body>
+</html>

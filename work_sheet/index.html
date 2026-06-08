@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIROOM — Нейросеть для создания продающих карточек товаров</title>
+
+  <!-- ШРИФТЫ (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- БИБЛИОТЕКИ (в head) -->
+  <!-- AOS анимации при скролле -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+  <!-- Lucide иконки без эмодзи -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- GSAP для анимации заголовка -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- ЦВЕТОВАЯ СХЕМА И СТИЛИ -->
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --bg-card: #242424;
+      --accent: #F5C800;
+      --accent-hover: #e0b400;
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.55);
+      --border: rgba(255,255,255,0.08);
+      --radius: 16px;
+    }
+
+    /* Сброс стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Onest', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Навигация (Sticky nav) */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: all 0.4s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(28, 28, 28, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      transition: padding 0.4s ease;
+    }
+
+    nav.scrolled .nav-container {
+      padding: 16px 24px;
+    }
+
+    /* Логотип AIROOM */
+    .logo {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo .logo-ai {
+      color: var(--accent);
+    }
+
+    .logo .logo-room {
+      color: var(--text);
+    }
+
+    /* По центру: ссылки */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      padding: 6px 16px;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    .nav-link.active {
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 6px 16px;
+      color: var(--accent);
+    }
+
+    /* Справа: действия */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-login {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'Onest', sans-serif;
+      cursor: pointer;
+      padding: 10px 18px;
+      border-radius: 12px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn-login:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #111111;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 10px 22px;
+      font-family: 'Onest', sans-serif;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 200, 0, 0.35);
+      background-color: var(--accent-hover);
+    }
+
+    .btn-start svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Burger Menu */
+    .burger-menu {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 1001;
+    }
+
+    .burger-bar {
+      width: 100%;
+      height: 2px;
+      background-color: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+
+    /* Мобильное выпадающее меню */
+    .mobile-nav-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(28, 28, 28, 0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mobile-nav-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-nav-content {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      gap: 24px;
+      width: 80%;
+      max-width: 320px;
+    }
+
+    .mobile-nav-link {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 10px;
+      transition: color 0.3s ease;
+    }
+
+    .mobile-nav-link.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .mobile-nav-link:hover {
+      color: var(--text);
+    }
+
+    .mobile-nav-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .mobile-btn-login {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .mobile-btn-start {
+      background: var(--accent);
+      color: #111111;
+      padding: 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Hero Секция (100vh) */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      padding: 80px 24px 0;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Фоновые деликатные свечения (Glow effects) */
+    .glow-spot {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 200, 0, 0.08) 0%, rgba(245, 200, 0, 0) 70%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-spot-1 {
+      width: 450px;
+      height: 450px;
+      top: 15%;
+      left: -100px;
+    }
+
+    .glow-spot-2 {
+      width: 500px;
+      height: 500px;
+      bottom: 10%;
+      right: -100px;
+    }
+
+    .glow-spot-3 {
+      width: 350px;
+      height: 350px;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 75%);
+    }
+
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* [1] Бейдж над заголовком */
+    .badge {
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Onest', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      margin-bottom: 24px;
+    }
+
+    .badge svg {
+      color: var(--accent);
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* [2] Заголовок H1 */
+    .hero-title {
+      font-size: clamp(48px, 6.5vw, 84px);
+      line-height: 1.1;
+      font-weight: 700;
+      font-family: 'Unbounded', sans-serif;
+      text-align: center;
+      max-width: 800px;
+      color: var(--text);
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-title .typed-wrapper {
+      color: var(--accent);
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    #typewriter-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 0.85em;
+      background: var(--accent);
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* [3] Подзаголовок */
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.65;
+      text-align: center;
+      margin-bottom: 36px;
+      font-family: 'Onest', sans-serif;
+    }
+
+    .hero-sub-highlight {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .hero-sub-accent {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* [4] Кнопка CTA */
+    .btn-primary {
+      background: var(--accent);
+      color: #111111;
+      border-radius: 14px;
+      padding: 16px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Onest', sans-serif;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(245, 200, 0, 0.4);
+      background-color: var(--accent-hover);
+    }
+
+    .btn-primary svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.5;
+    }
+
+    /* [5] Скролл-индикатор */
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .scroll-text {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .scroll-mouse {
+      width: 22px;
+      height: 34px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      position: relative;
+      margin: 8px auto 0;
+    }
+
+    .scroll-mouse::after {
+      content: '';
+      width: 4px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 2px;
+      position: absolute;
+      left: 50%;
+      top: 5px;
+      transform: translateX(-50%);
+      animation: scrollDot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes scrollDot {
+      0%, 100% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+      80% {
+        transform: translateX(-50%) translateY(12px);
+        opacity: 0;
+      }
+    }
+
+    /* Бегущая строка под Hero */
+    .marquee-section {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      background: var(--bg);
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .marquee-wrapper {
+      display: flex;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .marquee-content {
+      display: inline-flex;
+      animation: marquee 28s linear infinite;
+    }
+
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'Onest', sans-serif;
+      letter-spacing: 0.04em;
+      padding: 0 10px;
+    }
+
+    .marquee-star {
+      color: var(--accent);
+      margin-right: 16px;
+      margin-left: 16px;
+      font-size: 14px;
+    }
+
+    @keyframes marquee {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+
+    /* Адаптивная верстка */
+    @media (max-width: 768px) {
+      .nav-links, .nav-actions {
+        display: none;
+      }
+
+      .burger-menu {
+        display: flex;
+      }
+
+      .hero {
+        padding: 100px 16px 0;
+      }
+
+      .hero-title {
+        font-size: clamp(36px, 8vw, 52px);
+        margin-bottom: 18px;
+        padding: 0 8px;
+      }
+
+      .hero-sub {
+        font-size: 15px;
+        padding: 0 16px;
+        margin-bottom: 28px;
+      }
+
+      .btn-primary {
+        padding: 14px 28px;
+        font-size: 15px;
+      }
+
+      .scroll-indicator {
+        bottom: 24px;
+      }
+
+      .glow-spot-1 {
+        width: 260px;
+        height: 260px;
+      }
+
+      .glow-spot-2 {
+        width: 260px;
+        height: 260px;
+      }
+    }
+
+    /* Секция Примеры работ */
+    .examples-section {
+      padding: 100px 24px;
+      background: var(--bg);
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .examples-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .examples-subtitle {
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.2s;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: inline-block;
+      font-family: 'Onest', sans-serif;
+    }
+
+    .examples-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .examples-desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Фильтры категорий */
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 45px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Onest', sans-serif;
+    }
+
+    .filter-btn:hover {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #111111;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Сетка карточек */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    /* Карточка */
+    .example-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .example-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(245, 200, 0, 0.25);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Место для фото До/После */
+    .card-media {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: #141414;
+    }
+
+    /* Слои изображения до/после */
+    .media-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .img-before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .img-after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Показывать "После" при наведении */
+    .example-card:hover .img-after {
+      opacity: 1;
+    }
+
+    /* Принудительное увеличение масштаба при ховере */
+    .example-card:hover .media-img {
+      transform: scale(1.05);
+    }
+
+    /* Красивые плашки "До" и "После" */
+    .badge-label {
+      position: absolute;
+      top: 14px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      z-index: 10;
+      font-family: 'Onest', sans-serif;
+    }
+
+    .badge-before {
+      left: 14px;
+      background: rgba(239, 68, 68, 0.85); /* Красная полупрозрачная для До */
+      color: #fff;
+      backdrop-filter: blur(4px);
+    }
+
+    .badge-after {
+      right: 14px;
+      background: rgba(16, 185, 129, 0.85); /* Зеленая полупрозрачная для После */
+      color: #fff;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Плавное затемнение с иконкой для увеличения */
+    .hover-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(28, 28, 28, 0.75);
+      z-index: 15;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.35s ease-in-out;
+      gap: 12px;
+    }
+
+    .example-card:hover .hover-overlay {
+      opacity: 1;
+    }
+
+    .zoom-icon-wrapper {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(0.85);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(245, 200, 0, 0.3);
+    }
+
+    .example-card:hover .zoom-icon-wrapper {
+      transform: scale(1);
+    }
+
+    .zoom-icon-wrapper svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+
+    .zoom-text {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s;
+    }
+
+    .example-card:hover .zoom-text {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Инфо под медиа */
+    .card-info {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.01);
+      flex-grow: 1;
+    }
+
+    .card-category {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 20px;
+    }
+
+    .lightbox-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      max-width: 960px;
+      width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      transform: scale(0.92);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    .lightbox-modal.active .lightbox-container {
+      transform: scale(1);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(90deg);
+    }
+
+    .lightbox-content {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+    }
+
+    @media (max-width: 768px) {
+      .lightbox-content {
+        grid-template-columns: 1fr;
+        max-height: 85vh;
+        overflow-y: auto;
+      }
+      .lightbox-image-side {
+        aspect-ratio: 1 / 1;
+      }
+    }
+
+    .lightbox-image-side {
+      position: relative;
+      background: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Интерактивный Слайдер сравнения */
+    .comparison-slider {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .slider-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .slider-img-after {
+      z-index: 1;
+    }
+
+    .slider-resize {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      z-index: 2;
+      overflow: hidden;
+      border-right: 2px solid var(--accent);
+    }
+
+    .slider-resize .slider-img-before {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      max-width: none;
+    }
+
+    /* Ручка слайдера */
+    .slider-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      left: 50%;
+      z-index: 10;
+      transform: translateX(-50%);
+      pointer-events: none; /* Handled by slider clicks and mousemove */
+    }
+
+    .slider-handle-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      color: #111;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(245, 200, 0, 0.45);
+      pointer-events: auto;
+      cursor: ew-resize;
+    }
+
+    .slider-handle-button svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.5;
+    }
+
+    /* Правая колонка с описанием кейса */
+    .lightbox-info-side {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .lightbox-category {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .lightbox-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .lightbox-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Статистика улучшения */
+    .lightbox-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .stat-num {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .lightbox-cta {
+      margin-top: 10px;
+    }
+
+    .lightbox-cta .btn-primary {
+      width: 100%;
+      justify-content: center;
+      padding: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Навигационное меню (Sticky nav) -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-ai">AI</span><span class="logo-room">ROOM</span>
+      </a>
+
+      <!-- Ссылки по центру (скрыты на мобильных) -->
+      <div class="nav-links">
+        <a href="#how" class="nav-link active">Как это работает</a>
+        <a href="#examples" class="nav-link">Примеры</a>
+        <a href="#pricing" class="nav-link">Тарифы</a>
+        <a href="#faq" class="nav-link">Вопросы</a>
+        <a href="#contacts" class="nav-link">Контакты</a>
+      </div>
+
+      <!-- Кнопки справа (скрыты на мобильных) -->
+      <div class="nav-actions">
+        <button class="btn-login" type="button">Войти</button>
+        <a href="/select.html" class="btn-start">
+          <i data-lucide="sparkles"></i>Начать проект
+        </a>
+      </div>
+
+      <!-- Кнопка бургер-меню (видна только на мобильных) -->
+      <button class="burger-menu" id="burgerBtn" aria-label="Открыть мобильное меню" type="button">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Мобильное выпадающее меню -->
+  <div class="mobile-nav-overlay" id="mobileNav">
+    <div class="mobile-nav-content">
+      <a href="#how" class="mobile-nav-link active">Как это работает</a>
+      <a href="#examples" class="mobile-nav-link">Примеры</a>
+      <a href="#pricing" class="mobile-nav-link">Тарифы</a>
+      <a href="#faq" class="mobile-nav-link">Вопросы</a>
+      <a href="#contacts" class="mobile-nav-link">Контакты</a>
+      
+      <div class="mobile-nav-actions">
+        <a href="#login" class="mobile-btn-login">Войти</a>
+        <a href="/select.html" class="mobile-btn-start">
+          <i data-lucide="sparkles"></i>Начать проект
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO секция -->
+  <section class="hero" id="hero-section">
+    <!-- Фоновые свечения -->
+    <div class="glow-spot glow-spot-1"></div>
+    <div class="glow-spot glow-spot-2"></div>
+    <div class="glow-spot glow-spot-3"></div>
+
+    <div class="hero-content">
+      <!-- [1] Бейдж над заголовком -->
+      <span class="badge hero-badge">
+        <i data-lucide="sparkles"></i> НЕЙРОСЕТЬ ДЛЯ МАРКЕТПЛЕЙСОВ
+      </span>
+
+      <!-- [2] Заголовок H1 -->
+      <h1 class="hero-title">
+        Нейросеть для <br>
+        <span class="typed-wrapper">
+          <span id="typewriter"></span><span id="typewriter-cursor"></span>
+        </span>
+      </h1>
+
+      <!-- [3] Подзаголовок -->
+      <p class="hero-sub">
+        Загрузите фото товара — нейросеть сделает <span class="hero-sub-highlight">редизайн</span> и <span class="hero-sub-highlight">обработку</span> и соберёт <span class="hero-sub-accent">продающую карточку</span> для Wildberries и Ozon.
+      </p>
+
+      <!-- [4] Кнопка CTA -->
+      <a href="/select.html" class="btn-primary">
+        Попробовать бесплатно <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- [5] Скролл-индикатор -->
+    <div class="scroll-indicator">
+      <span class="scroll-text">СКРОЛЛ</span>
+      <div class="scroll-mouse" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- БЕГУЩАЯ СТРОКА ПОД HERO (Marquee) -->
+  <div class="marquee-section">
+    <div class="marquee-wrapper">
+      <div class="marquee-content">
+        <div class="marquee-item"><span class="marquee-star">✦</span>Wildberries</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Ozon</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Продающие карточки</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>AI-фотосессия</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Карточки для маркетплейсов</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>ИИ-обработка фото</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Инфографика</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Яндекс.Маркет</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Lamoda</div>
+        
+        <!-- Дублирование для бесшовной бесконечной прокрутки -->
+        <div class="marquee-item"><span class="marquee-star">✦</span>Wildberries</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Ozon</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Продающие карточки</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>AI-фотосессия</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Карточки для маркетплейсов</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>ИИ-обработка фото</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Инфографика</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Яндекс.Маркет</div>
+        <div class="marquee-item"><span class="marquee-star">✦</span>Lamoda</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- РАЗДЕЛ "ПРИМЕРЫ РАБОТ" -->
+  <section class="examples-section" id="examples">
+    <div class="examples-header" data-aos="fade-up">
+      <span class="examples-subtitle">Галерея Кейсов</span>
+      <h2 class="examples-title">Результаты работы AIROOM</h2>
+      <p class="examples-desc">
+        Посмотрите, как обычные любительские фотографии превращаются в продающие шедевры для маркетплейсов с помощью наших ИИ-генераторов.
+      </p>
+    </div>
+
+    <!-- Фильтры категорий -->
+    <div class="filter-container" data-aos="fade-up" data-aos-delay="100">
+      <button class="filter-btn active" data-filter="all">Все работы</button>
+      <button class="filter-btn" data-filter="shoes">Одежда и Обувь</button>
+      <button class="filter-btn" data-filter="electronics">Электроника</button>
+      <button class="filter-btn" data-filter="cosmetics">Косметика</button>
+    </div>
+
+    <!-- Сетка кейсов -->
+    <div class="grid-container" data-aos="fade-up" data-aos-delay="200">
+      
+      <!-- Карточка 1 -->
+      <div class="example-card" data-cat="shoes" 
+           data-title="Спортивные кроссовки HyperRun"
+           data-desc="Обычный снимок кроссовка на сером домашнем полу превращён в динамичный рекламный постер с парящим эффектом, неоновым свечением, брызгами воды и контрастной инфографикой, создавая ощущение высокого премиум-бренда."
+           data-before="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop"
+           data-after="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=600&auto=format&fit=crop"
+           data-stat1-num="+145%"
+           data-stat1-label="Конверсия в корзину"
+           data-stat2-num="45 мин"
+           data-stat2-label="Время создания AI">
+        <div class="card-media">
+          <!-- До фото -->
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop" class="media-img img-before" alt="До: Кроссовки" loading="lazy">
+          
+          <!-- После фото -->
+          <img src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=600&auto=format&fit=crop" class="media-img img-after" alt="После: Кроссовки" loading="lazy">
+
+          <!-- Плашки -->
+          <span class="badge-label badge-before">До</span>
+          <span class="badge-label badge-after">После AI</span>
+
+          <!-- Плавное затемнение + иконка увеличения -->
+          <div class="hover-overlay">
+            <div class="zoom-icon-wrapper" aria-hidden="true">
+              <i data-lucide="zoom-in"></i>
+            </div>
+            <span class="zoom-text">Сравнить До/После</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <span class="card-category">Одежда и Обувь</span>
+          <h3 class="card-title">Кроссовки HyperRun</h3>
+          <p class="card-desc">Создан динамичный фон с парящей композицией, брызгами воды и студийным освещением.</p>
+          <div class="comparison-label">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--accent);"></i> Наведите для сравнения
+          </div>
+        </div>
+      </div>
+
+      <!-- Карточка 2 -->
+      <div class="example-card" data-cat="electronics"
+           data-title="Беспроводные наушники SoundWave"
+           data-desc="Обычное тусклое фото наушников на домашнем ковре заменено на роскошную композицию в глубоких космических фиолетовых тонах со звуковыми волнами, контрастными бейджами технических характеристик и премиальным блеском."
+           data-before="https://images.unsplash.com/photo-1484704849700-f032a568e944?q=80&w=600&auto=format&fit=crop"
+           data-after="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600&auto=format&fit=crop"
+           data-stat1-num="+180%"
+           data-stat1-label="Кликбейтность CTR"
+           data-stat2-num="30 сек"
+           data-stat2-label="Генерация фона">
+        <div class="card-media">
+          <img src="https://images.unsplash.com/photo-1484704849700-f032a568e944?q=80&w=600&auto=format&fit=crop" class="media-img img-before" alt="До: Наушники" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600&auto=format&fit=crop" class="media-img img-after" alt="После: Наушники" loading="lazy">
+          
+          <span class="badge-label badge-before">До</span>
+          <span class="badge-label badge-after">После AI</span>
+
+          <div class="hover-overlay">
+            <div class="zoom-icon-wrapper" aria-hidden="true">
+              <i data-lucide="zoom-in"></i>
+            </div>
+            <span class="zoom-text">Сравнить До/После</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <span class="card-category">Электроника</span>
+          <h3 class="card-title">Наушники SoundWave</h3>
+          <p class="card-desc">Интегрирован глубокий космический фон с неоновыми звуковыми вибрациями и детализацией.</p>
+          <div class="comparison-label">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--accent);"></i> Наведите для сравнения
+          </div>
+        </div>
+      </div>
+
+      <!-- Карточка 3 -->
+      <div class="example-card" data-cat="cosmetics"
+           data-title="Органическая сыворотка SkinGlow"
+           data-desc="Бутылочка сыворотки, сфотографированная под обычным углом на кухонном столе, перенесена в безупречный спа-натюрморт с чистыми брызгами родниковой воды, сочными зелеными листьями и нежным утренним солнцем."
+           data-before="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop"
+           data-after="https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop"
+           data-stat1-num="+210%"
+           data-stat1-label="Рост продаж"
+           data-stat2-num="99.4%"
+           data-stat2-label="Точность обрезки ИИ">
+        <div class="card-media">
+          <img src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop" class="media-img img-before" alt="До: Косметика" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop" class="media-img img-after" alt="После: Косметика" loading="lazy">
+          
+          <span class="badge-label badge-before">До</span>
+          <span class="badge-label badge-after">После AI</span>
+
+          <div class="hover-overlay">
+            <div class="zoom-icon-wrapper" aria-hidden="true">
+              <i data-lucide="zoom-in"></i>
+            </div>
+            <span class="zoom-text">Сравнить До/После</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <span class="card-category">Косметика</span>
+          <h3 class="card-title">Сыворотка SkinGlow</h3>
+          <p class="card-desc">Добавлен свежий органический спа-фон с брызсами воды, эко-элементами и студийным глянцем.</p>
+          <div class="comparison-label">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--accent);"></i> Наведите для сравнения
+          </div>
+        </div>
+      </div>
+
+      <!-- Карточка 4 -->
+      <div class="example-card" data-cat="electronics"
+           data-title="Смарт-часы FitPro Active"
+           data-desc="Часы с руки обычного человека перенесены на высокотехнологичный киберспортивный подиум с трехмерными лазерными лучами, голографическими дашбордами и профессиональной инфографикой параметров здоровья."
+           data-before="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop"
+           data-after="https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop"
+           data-stat1-num="+120%"
+           data-stat1-label="Увеличение просмотров"
+           data-stat2-num="1.2 сек"
+           data-stat2-label="Рендер инфографики">
+        <div class="card-media">
+          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop" class="media-img img-before" alt="До: Часы" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop" class="media-img img-after" alt="После: Часы" loading="lazy">
+          
+          <span class="badge-label badge-before">До</span>
+          <span class="badge-label badge-after">После AI</span>
+
+          <div class="hover-overlay">
+            <div class="zoom-icon-wrapper" aria-hidden="true">
+              <i data-lucide="zoom-in"></i>
+            </div>
+            <span class="zoom-text">Сравнить До/После</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <span class="card-category">Электроника</span>
+          <h3 class="card-title">Смарт-часы FitPro Active</h3>
+          <p class="card-desc">Создан темный технологичный подиум со светящимися кругами и футуристичной инфографикой.</p>
+          <div class="comparison-label">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--accent);"></i> Наведите для сравнения
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ИНТЕРАКТИВНЫЙ LIGHTBOX СРАВНЕНИЯ -->
+  <div class="lightbox-modal" id="comparisonLightbox">
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Закрыть">
+        <i data-lucide="x"></i>
+      </button>
+
+      <div class="lightbox-content">
+        <!-- Слайдер До/После -->
+        <div class="lightbox-image-side">
+          <div class="comparison-slider" id="activeSlider">
+            <!-- После фото -->
+            <img id="sliderImgAfter" src="" class="slider-img slider-img-after" alt="После">
+            
+            <!-- До фото (содержится в ресайзере) -->
+            <div class="slider-resize" id="sliderResize">
+              <img id="sliderImgBefore" src="" class="slider-img slider-img-before" alt="До">
+            </div>
+
+            <!-- Ручка слайдера -->
+            <div class="slider-handle" id="sliderHandle">
+              <div class="slider-handle-button">
+                <i data-lucide="chevrons-left-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Описание -->
+        <div class="lightbox-info-side">
+          <span class="lightbox-category" id="lightboxCategory">Категория</span>
+          <h3 class="lightbox-title" id="lightboxTitle font-unbounded">Название товара</h3>
+          <p class="lightbox-desc" id="lightboxDesc">Описание преображения ИИ...</p>
+          
+          <div class="lightbox-stats">
+            <div class="stat-box">
+              <div class="stat-num" id="lightboxStat1Num">%</div>
+              <div class="stat-label" id="lightboxStat1Label">Метрика 1</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num" id="lightboxStat2Num">%</div>
+              <div class="stat-label" id="lightboxStat2Label">Метрика 2</div>
+            </div>
+          </div>
+
+          <div class="lightbox-cta">
+            <button class="btn-primary" type="button" id="lightboxCtaBtn">
+              Попробовать бесплатно <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФИНАЛЬНЫЙ JS-БЛОК -->
+  <script>
+    // 1. Инициализация иконок
+    lucide.createIcons();
+
+    // 2. Инициализация AOS
+    AOS.init({ duration: 700, once: true, offset: 60 });
+
+    // 3. Sticky nav
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // 4. Мобильное бургер-меню
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+
+    if (burgerBtn && mobileNav) {
+      burgerBtn.addEventListener('click', () => {
+        burgerBtn.classList.toggle('active');
+        mobileNav.classList.toggle('active');
+        if (mobileNav.classList.contains('active')) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      });
+
+      const mobileLinks = mobileNav.querySelectorAll('.mobile-nav-link, .mobile-btn-login, .mobile-btn-start');
+      mobileLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          burgerBtn.classList.remove('active');
+          mobileNav.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+
+    // 5. Typewriter эффект
+    const words = ["ИИ-редизайна", "карточек WB", "фото товара", "Ozon-листингов", "инфографики"];
+    let wi = 0, ci = 0, deleting = false;
+    const el = document.getElementById('typewriter');
+    function type() {
+      const word = words[wi];
+      el.textContent = deleting ? word.slice(0, ci--) : word.slice(0, ci++);
+      if (!deleting && ci > word.length) { deleting = true; setTimeout(type, 1400); return; }
+      if (deleting && ci < 0) { deleting = false; wi = (wi + 1) % words.length; ci = 0; }
+      setTimeout(type, deleting ? 55 : 95);
+    }
+    type();
+
+    // 6. GSAP анимация появления блоков
+    gsap.from(".hero-badge", { y: -14, opacity: 0, duration: 0.6, delay: 0.1 });
+    gsap.from(".hero-title", { y: 22, opacity: 0, duration: 0.7, delay: 0.3 });
+    gsap.from(".hero-sub",   { y: 18, opacity: 0, duration: 0.6, delay: 0.5 });
+    gsap.from(".btn-primary",{ y: 18, opacity: 0, duration: 0.6, delay: 0.7 });
+    gsap.from(".scroll-indicator", { opacity: 0, duration: 0.6, delay: 1.1 });
+
+    // 7. Интерактивная фильтрация карточек
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.example-card');
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Смена активного класса кнопки
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filterValue = btn.getAttribute('data-filter');
+
+        // Фильтрация с плавной GSAP анимацией
+        gsap.to(cards, {
+          opacity: 0,
+          scale: 0.9,
+          duration: 0.2,
+          onComplete: () => {
+            cards.forEach(card => {
+              const cardCat = card.getAttribute('data-cat');
+              if (filterValue === 'all' || cardCat === filterValue) {
+                card.style.display = 'flex';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+
+            // Плавное анимационное появление отфильтрованных карточек
+            const visibleCards = Array.from(cards).filter(c => c.style.display !== 'none');
+            gsap.to(visibleCards, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.4,
+              stagger: 0.08,
+              clearProps: "all"
+            });
+          }
+        });
+      });
+    });
+
+    // 8. Логика интерактивного Lightbox и слайдера сравнения
+    const lightbox = document.getElementById('comparisonLightbox');
+    const closeBtn = document.getElementById('lightboxCloseBtn');
+    const activeSlider = document.getElementById('activeSlider');
+    const sliderResize = document.getElementById('sliderResize');
+    const sliderHandle = document.getElementById('sliderHandle');
+
+    // DOM Элементы модального окна для наполнения данными
+    const lImgBefore = document.getElementById('sliderImgBefore');
+    const lImgAfter = document.getElementById('sliderImgAfter');
+    const lCategory = document.getElementById('lightboxCategory');
+    const lTitle = document.getElementById('comparisonLightbox').querySelector('.lightbox-title');
+    const lDesc = document.getElementById('lightboxDesc');
+    const lStat1Num = document.getElementById('lightboxStat1Num');
+    const lStat1Label = document.getElementById('lightboxStat1Label');
+    const lStat2Num = document.getElementById('lightboxStat2Num');
+    const lStat2Label = document.getElementById('lightboxStat2Label');
+    const lCtaBtn = document.getElementById('lightboxCtaBtn');
+
+    // Открытие Lightbox при клике на карточку примера
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        // Считываем данные из атрибутов кликнутой карточки
+        const titleText = card.getAttribute('data-title');
+        const descText = card.getAttribute('data-desc');
+        const imgBeforeSrc = card.getAttribute('data-before');
+        const imgAfterSrc = card.getAttribute('data-after');
+        const catText = card.querySelector('.card-category').textContent;
+        const stat1Num = card.getAttribute('data-stat1-num');
+        const stat1Label = card.getAttribute('data-stat1-label');
+        const stat2Num = card.getAttribute('data-stat2-num');
+        const stat2Label = card.getAttribute('data-stat2-label');
+
+        // Наполняем модальное окно информацией
+        lImgBefore.src = imgBeforeSrc;
+        lImgAfter.src = imgAfterSrc;
+        lCategory.textContent = catText;
+        if (lTitle) lTitle.textContent = titleText;
+        lDesc.textContent = descText;
+        lStat1Num.textContent = stat1Num;
+        lStat1Label.textContent = stat1Label;
+        lStat2Num.textContent = stat2Num;
+        lStat2Label.textContent = stat2Label;
+
+        // Поведение кнопки CTA внутри модального окна
+        if (lCtaBtn) {
+          lCtaBtn.innerHTML = 'Начать проект с этим стилем <i data-lucide="sparkles"></i>';
+          lCtaBtn.onclick = () => {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            window.location.href = '/select.html';
+          };
+        }
+
+        // Рендерим иконки Lucide заново для модального окна
+        setTimeout(() => {
+          lucide.createIcons();
+        }, 50);
+
+        // По умолчанию выставляем слайдер на середину (50%)
+        sliderResize.style.width = '50%';
+        sliderHandle.style.left = '50%';
+
+        // Отображение модального окна
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Отключаем прокрутку страницы
+      });
+    });
+
+    // Функция закрытия Lightbox
+    const closeLightbox = () => {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLightbox();
+      });
+    }
+
+    // Закрытие по клику вне контейнера
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    // Механика перемещения ползунка До/После (Slider)
+    let isDragging = false;
+
+    // Общая функция для подсчета процента и обновления стилей слайдера
+    function moveSlider(clientX) {
+      if (!activeSlider) return;
+      const rect = activeSlider.getBoundingClientRect();
+      const x = clientX - rect.left;
+      let percentage = (x / rect.width) * 100;
+
+      // Ограничение значений в пределах 0-100%
+      if (percentage < 0) percentage = 0;
+      if (percentage > 100) percentage = 100;
+
+      // Применяем стили ресайза и положения ползунка
+      sliderResize.style.width = `${percentage}%`;
+      sliderHandle.style.left = `${percentage}%`;
+    }
+
+    // Обработка событий мыши
+    if (activeSlider) {
+      activeSlider.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        moveSlider(e.clientX);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        moveSlider(e.clientX);
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // Поддержка сенсорных экранов (Mobile / Touch)
+      activeSlider.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        if (e.touches && e.touches[0]) {
+          moveSlider(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        if (e.touches && e.touches[0]) {
+          moveSlider(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+    }
+  </script>
+</body>
+</html>

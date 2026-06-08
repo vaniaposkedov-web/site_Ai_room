@@ -68,6 +68,48 @@ export async function analyzeProductImage(dataUrl: string): Promise<ProductTags>
 const SYSTEM_COMPETITOR =
   'Ты эксперт по карточкам маркетплейсов (Wildberries, Ozon). На вход — ссылка на товар конкурента и преимущества нашего товара. Дай краткий вывод на русском (2–3 предложения) о том, чем наша карточка с инфографикой выигрывает в выдаче. Обычный текст, без markdown.'
 
+/* ── Полное определение товара (для редактора инфографики) ── */
+export interface ProductSpec { label: string; value: string }
+export interface ProductDetails {
+  category: string
+  type: string
+  specs: ProductSpec[]
+  advantages: string[]
+}
+
+const SYSTEM_DETECT =
+  'Ты эксперт по маркетплейсам (Wildberries, Ozon). Проанализируй фото товара и верни СТРОГО JSON без markdown: { "category": "категория", "type": "конкретный тип товара", "specs": [{"label":"...","value":"..."} — 6-9 правдоподобных характеристик], "advantages": ["преимущество1","преимущество2","преимущество3","преимущество4"] }. ВСЕ значения строго НА РУССКОМ ЯЗЫКЕ. Без пояснений.'
+
+export async function detectProduct(dataUrl: string): Promise<ProductDetails> {
+  const content = await chat(
+    [
+      { role: 'system', content: SYSTEM_DETECT },
+      { role: 'user', content: [{ type: 'text', text: 'Определи товар, характеристики и преимущества.' }, { type: 'image_url', image_url: { url: dataUrl } }] },
+    ],
+    { maxTokens: 700 },
+  )
+  const p = extractJson(content) as { category?: string; type?: string; specs?: unknown; advantages?: unknown }
+  const specs = Array.isArray(p.specs)
+    ? (p.specs as Array<{ label?: unknown; value?: unknown }>).slice(0, 10).map((s) => ({ label: String(s.label ?? ''), value: String(s.value ?? '') })).filter((s) => s.label)
+    : []
+  const advantages = Array.isArray(p.advantages) ? (p.advantages as unknown[]).slice(0, 6).map((a) => String(a)) : []
+  return { category: String(p.category ?? ''), type: String(p.type ?? ''), specs, advantages }
+}
+
+const SYSTEM_INFO =
+  'Ты копирайтер карточек маркетплейсов. Сгенерируй ровно 4 коротких продающих преимущества товара. Каждое с новой строки, начинается с символа ✦, до 6 слов. Только список, без вступления и markdown.'
+
+export async function infographicIdea(category: string, type: string): Promise<string> {
+  const out = await chat(
+    [
+      { role: 'system', content: SYSTEM_INFO },
+      { role: 'user', content: `Товар: ${type || category || 'товар'} (категория: ${category}). Дай 4 преимущества.` },
+    ],
+    { maxTokens: 200, temperature: 0.8 },
+  )
+  return out.trim()
+}
+
 const SYSTEM_PROMPT_IDEA =
   'Ты промпт-инженер для генерации студийных фонов карточек товаров. Преврати короткое пожелание пользователя в один детальный профессиональный промпт на русском (1–2 предложения): опиши сцену, поверхность, свет, материалы и настроение. Верни только промпт, без markdown, кавычек и пояснений.'
 

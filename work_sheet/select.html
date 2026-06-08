@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Выбор инструментов — AIROOM</title>
+
+  <!-- ШРИФТЫ (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- БИБЛИОТЕКИ -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- ЦВЕТОВАЯ СХЕМА И СТИЛИ -->
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --bg-card: #242424;
+      --bg-card-hover: #2a2a2a;
+      --accent: #F5C800;
+      --accent-hover: #e0b400;
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.25);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(245,200,0,0.35);
+      --radius: 20px;
+    }
+
+    /* Сброс стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      color: var(--text);
+      font-family: 'Onest', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Фоновые деликатные свечения */
+    .glow-spot {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 200, 0, 0.05) 0%, rgba(245, 200, 0, 0) 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-spot-1 {
+      width: 500px;
+      height: 500px;
+      top: 10%;
+      left: -150px;
+    }
+
+    .glow-spot-2 {
+      width: 600px;
+      height: 600px;
+      bottom: 20%;
+      right: -150px;
+    }
+
+    /* Навигация (Sticky nav) */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition: all 0.4s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(28, 28, 28, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      transition: padding 0.4s ease;
+    }
+
+    nav.scrolled .nav-container {
+      padding: 16px 24px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Кнопка назад */
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateX(-2px);
+    }
+
+    .btn-back svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    /* Логотип AIROOM */
+    .logo {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo .logo-ai {
+      color: var(--accent);
+    }
+
+    .logo .logo-room {
+      color: var(--text);
+    }
+
+    /* Ссылки */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      padding: 6px 16px;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    /* Справа: действия */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-login {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'Onest', sans-serif;
+      cursor: pointer;
+      padding: 10px 18px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-login:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #111111;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 10px 22px;
+      font-family: 'Onest', sans-serif;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 200, 0, 0.35);
+      background-color: var(--accent-hover);
+    }
+
+    .btn-start svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Burger Menu */
+    .burger-menu {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 101;
+    }
+
+    .burger-bar {
+      width: 100%;
+      height: 2px;
+      background-color: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(2) {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+
+    .burger-menu.active .burger-bar:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+
+    /* Мобильное выпадающее меню */
+    #mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(28,28,28,0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--border);
+      padding: 100px 24px 32px;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 99;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #mobile-menu.open {
+      display: flex;
+    }
+
+    #mobile-menu a {
+      color: var(--text-muted);
+      font-family: 'Onest';
+      font-size: 20px;
+      text-decoration: none;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      width: 100%;
+      text-align: center;
+      transition: color 0.3s ease;
+    }
+
+    #mobile-menu a:hover {
+      color: var(--text);
+    }
+
+    #mobile-menu a:last-child {
+      border-bottom: none;
+    }
+
+    #mobile-menu .mobile-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    #mobile-menu .mobile-btn-start {
+      background: var(--accent);
+      color: #111;
+      padding: 14px;
+      border-radius: 12px;
+      width: 100%;
+      font-weight: bold;
+      text-align: center;
+      font-family: 'Onest';
+      font-size: 16px;
+    }
+
+    #mobile-menu .mobile-btn-login {
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 12px;
+      width: 100%;
+      font-weight: bold;
+      text-align: center;
+      font-family: 'Onest';
+      font-size: 16px;
+    }
+
+    /* ШАПКА СТРАНИЦЫ */
+    .header-section {
+      position: relative;
+      padding-top: 130px;
+      text-align: center;
+      z-index: 2;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Бейдж */
+    .page-badge {
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .page-badge svg {
+      color: var(--accent);
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Заголовок H1 */
+    .page-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(32px, 5vw, 62px);
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      margin-top: 20px;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+
+    /* Подзаголовок */
+    .page-subtitle {
+      font-family: 'Onest', sans-serif;
+      font-size: 16px;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 480px;
+      margin: 14px auto 0;
+      line-height: 1.65;
+    }
+
+    /* СЕТКА КАРТОЧЕК */
+    .cards-container {
+      position: relative;
+      z-index: 10;
+      margin-top: 56px;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 0 24px 140px; /* Дополнительный отступ снизу под fixed панелью */
+    }
+
+    /* СТИЛЬ КАЖДОЙ КАРТОЧКИ */
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 26px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      user-select: none;
+    }
+
+    .tool-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(245,200,0,0.12);
+    }
+
+    .tool-card.selected {
+      border-color: var(--accent);
+      background: rgba(245,200,0,0.06);
+      box-shadow: 0 0 0 2px rgba(245,200,0,0.25), 0 16px 48px rgba(0,0,0,0.3);
+    }
+
+    /* Фоновый номер карточки */
+    .tool-card::before {
+      content: attr(data-num);
+      position: absolute;
+      right: 18px;
+      top: 12px;
+      font-family: 'Unbounded';
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* Иконка */
+    .tool-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(245,200,0,0.06);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    .tool-icon svg {
+      color: var(--accent);
+      width: 22px;
+      height: 22px;
+    }
+
+    .tool-card:hover .tool-icon,
+    .tool-card.selected .tool-icon {
+      background: rgba(245,200,0,0.14);
+    }
+
+    /* Галочка выбора */
+    .tool-check {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+      opacity: 0;
+    }
+
+    .tool-card:hover .tool-check {
+      opacity: 0.5;
+    }
+
+    .tool-card.selected .tool-check {
+      opacity: 1;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .tool-check svg {
+      color: #111;
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Название */
+    .tool-name {
+      font-family: 'Unbounded';
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      padding-right: 12px;
+    }
+
+    /* Тег */
+    .tool-tag {
+      display: inline-block;
+      font-family: 'Onest';
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      width: fit-content;
+    }
+
+    .tool-card.selected .tool-tag {
+      background: rgba(245,200,0,0.15);
+      color: var(--accent);
+    }
+
+    /* Описание */
+    .tool-desc {
+      font-family: 'Onest';
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    /* ФИКСИРОВАННАЯ НИЖНЯЯ ПАНЕЛЬ */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: rgba(28,28,28,0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      max-width: 100%;
+    }
+
+    .bottom-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .selected-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .selected-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    #selected-count {
+      font-family: 'Unbounded';
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .selected-pills-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-right: 12px;
+      scrollbar-width: none; /* Скрываем scrollbar */
+    }
+
+    .selected-pills-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    #selected-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Класс для пиллсов */
+    .pill {
+      background: rgba(245,200,0,0.12);
+      border: 1px solid rgba(245,200,0,0.25);
+      border-radius: 50px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .pill:hover {
+      background: rgba(245,200,0,0.22);
+      border-color: rgba(245,200,0,0.35);
+      transform: scale(1.02);
+    }
+
+    .pill svg {
+      color: var(--accent);
+      width: 12px;
+      height: 12px;
+      stroke-width: 2.5;
+    }
+
+    .bottom-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 22px;
+      color: var(--text-muted);
+      font-family: 'Onest';
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn-reset:hover {
+      border-color: rgba(255,255,255,0.20);
+      color: var(--text);
+    }
+
+    .btn-continue {
+      background: var(--accent);
+      color: #111;
+      border-radius: 12px;
+      padding: 14px 32px;
+      font-family: 'Unbounded';
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn-continue:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245,200,0,0.4);
+    }
+
+    .btn-continue svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 2.5;
+    }
+
+    /* Модальное инфо-окно об инициализации (для красивого Continue) */
+    .init-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(18, 18, 18, 0.96);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    .init-modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .init-modal-content {
+      text-align: center;
+      max-width: 450px;
+      padding: 32px;
+    }
+
+    .init-spinner {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      border: 3px solid rgba(255,255,255,0.05);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .init-title {
+      font-family: 'Unbounded';
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .init-desc {
+      font-family: 'Onest';
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* АДАПТАЦИЯ */
+    @media (max-width: 1024px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links, .nav-actions {
+        display: none;
+      }
+
+      .burger-menu {
+        display: flex;
+      }
+
+      .header-section {
+        padding-top: 110px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .page-title {
+        font-size: clamp(28px, 7vw, 42px);
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 0 16px 160px;
+      }
+
+      .bottom-bar {
+        padding: 14px 16px;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .bottom-bar-left {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .selected-pills-container {
+        width: 100%;
+        padding-right: 0;
+      }
+
+      .bottom-bar-right {
+        width: 100%;
+        gap: 10px;
+      }
+
+      .btn-reset {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        justify-content: center;
+      }
+
+      .btn-continue {
+        flex: 2;
+        padding: 12px;
+        justify-content: center;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Бэкграунд свечения -->
+  <div class="glow-spot glow-spot-1"></div>
+  <div class="glow-spot glow-spot-2"></div>
+
+  <!-- Навигационное меню (Sticky nav) -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="/" class="btn-back" aria-label="Назад">
+          <i data-lucide="arrow-left"></i>
+        </a>
+        <a href="/" class="logo">
+          <span class="logo-ai">AI</span><span class="logo-room">ROOM</span>
+        </a>
+      </div>
+
+      <!-- Centered Links -->
+      <div class="nav-links">
+        <a href="/#how" class="nav-link">Как это работает</a>
+        <a href="/#examples" class="nav-link">Примеры</a>
+        <a href="/#pricing" class="nav-link">Тарифы</a>
+        <a href="/#faq" class="nav-link">Вопросы</a>
+      </div>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+        <button class="btn-login" type="button">Войти</button>
+        <button class="btn-start" type="button" onclick="location.reload();">
+          <i data-lucide="sparkles"></i>Начать проект
+        </button>
+      </div>
+
+      <!-- Burger Menu -->
+      <button class="burger-menu" id="burger" aria-label="Открыть мобильное меню" type="button">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Мобильное меню -->
+  <div id="mobile-menu">
+    <a href="/#how">Как это работает</a>
+    <a href="/#examples">Примеры</a>
+    <a href="/#pricing">Тарифы</a>
+    <a href="/#faq">Вопросы</a>
+    
+    <div class="mobile-actions">
+      <a href="#login" class="mobile-btn-login">Войти</a>
+      <a href="#" class="mobile-btn-start" onclick="location.reload();">
+        <i data-lucide="sparkles"></i>Начать проект
+      </a>
+    </div>
+  </div>
+
+  <!-- ШАПКА СТРАНИЦЫ -->
+  <div class="header-section">
+    <!-- Бейдж -->
+    <span class="page-badge"><i data-lucide="layout-grid"></i> ВЫБЕРИТЕ ИНСТРУМЕНТ</span>
+    
+    <!-- Заголовок -->
+    <h1 class="page-title">Что будем создавать?</h1>
+
+    <!-- Подзаголовок -->
+    <p class="page-subtitle">Выберите один или несколько инструментов — мы соберём карточку под ваш товар</p>
+  </div>
+
+  <!-- СЕТКА КАРТОЧЕК -->
+  <div class="cards-container">
+    <div class="cards-grid">
+
+      <!-- Карточка 1 -->
+      <div class="tool-card" data-num="01" data-id="tool-1" data-aos="fade-up" data-aos-delay="0">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="layout-template"></i>
+        </div>
+        <div class="tool-name">Инфографика</div>
+        <span class="tool-tag">Маркетплейс</span>
+        <p class="tool-desc">Выносим ключевые характеристики прямо на фото товара. Размеры, состав, преимущества — всё в одном кадре.</p>
+      </div>
+
+      <!-- Карточка 2 -->
+      <div class="tool-card" data-num="02" data-id="tool-2" data-aos="fade-up" data-aos-delay="80">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="package"></i>
+        </div>
+        <div class="tool-name">Полная карточка товара</div>
+        <span class="tool-tag">Полный пакет</span>
+        <p class="tool-desc">Фото + фон + инфографика + SEO-описание. Готовая карточка под стандарты WB и Ozon за один запрос.</p>
+      </div>
+
+      <!-- Карточка 3 -->
+      <div class="tool-card" data-num="03" data-id="tool-3" data-aos="fade-up" data-aos-delay="160">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="user-round"></i>
+        </div>
+        <div class="tool-name">ИИ-фотомодель</div>
+        <span class="tool-tag">AI Studio</span>
+        <p class="tool-desc">Нейросеть одевает вашу одежду на профессиональную модель. Без съёмки, без студии — готово за секунды.</p>
+      </div>
+
+      <!-- Карточка 4 -->
+      <div class="tool-card" data-num="04" data-id="tool-4" data-aos="fade-up" data-aos-delay="240">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="message-square-text"></i>
+        </div>
+        <div class="tool-name">GPT-описание</div>
+        <span class="tool-tag">Текст</span>
+        <p class="tool-desc">AI пишет продающий заголовок и текст с SEO-ключами под маркетплейс. Ваш товар находят — и покупают.</p>
+      </div>
+
+      <!-- Карточка 5 -->
+      <div class="tool-card" data-num="05" data-id="tool-5" data-aos="fade-up" data-aos-delay="320">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="clapperboard"></i>
+        </div>
+        <div class="tool-name">Видео-анимация</div>
+        <span class="tool-tag">Видео</span>
+        <p class="tool-desc">Превращаем фото товара в короткое видео или анимацию. Идеально для Stories, Reels и видеообложек на WB.</p>
+      </div>
+
+      <!-- Карточка 6 -->
+      <div class="tool-card" data-num="06" data-id="tool-6" data-aos="fade-up" data-aos-delay="400">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="scan"></i>
+        </div>
+        <div class="tool-name">Белый фон</div>
+        <span class="tool-tag">Обработка</span>
+        <p class="tool-desc">Удаляем фон, выравниваем свет и готовим чистое студийное фото под требования маркетплейса. ~15 сек на фото.</p>
+      </div>
+
+      <!-- Карточка 7 -->
+      <div class="tool-card" data-num="07" data-id="tool-7" data-aos="fade-up" data-aos-delay="0">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <div class="tool-name">Обычная генерация</div>
+        <span class="tool-tag">Генерация</span>
+        <p class="tool-desc">Создаём фото товара с нуля по описанию или референсу. Lifestyle-сцены, студийный свет, любые фоны.</p>
+      </div>
+
+      <!-- Карточка 8 -->
+      <div class="tool-card" data-num="08" data-id="tool-8" data-aos="fade-up" data-aos-delay="80">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="wand-2"></i>
+        </div>
+        <div class="tool-name">Фото-эффекты</div>
+        <span class="tool-tag">Эффекты</span>
+        <p class="tool-desc">Глубина резкости, световые блики, отражения, дымка и другие кинематографические эффекты на фото товара.</p>
+      </div>
+
+      <!-- Карточка 9 -->
+      <div class="tool-card" data-num="09" data-id="tool-9" data-aos="fade-up" data-aos-delay="160">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="bar-chart-2"></i>
+        </div>
+        <div class="tool-name">Тренды и конкуренты</div>
+        <span class="tool-tag">Аналитика</span>
+        <p class="tool-desc">Анализируем тренды фотографии в вашей нише на Wildberries и Ozon. Смотрим что делают конкуренты — делаем лучше.</p>
+      </div>
+
+      <!-- Карточка 10 -->
+      <div class="tool-card" data-num="10" data-id="tool-10" data-aos="fade-up" data-aos-delay="240">
+        <div class="tool-check">
+          <i data-lucide="check"></i>
+        </div>
+        <div class="tool-icon">
+          <i data-lucide="pen-tool"></i>
+        </div>
+        <div class="tool-name">Создание логотипа</div>
+        <span class="tool-tag">Брендинг</span>
+        <p class="tool-desc">Разрабатываем логотип и фирменный стиль для вашего магазина на маркетплейсе. Уникально, без шаблонов.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ФИКСИРОВАННАЯ НИЖНЯЯ ПАНЕЛЬ -->
+  <div class="bottom-bar" id="bottom-bar">
+    <div class="bottom-bar-left">
+      <div class="selected-title-group">
+        <span class="selected-label">Выбрано:</span>
+        <span id="selected-count">0 инструментов</span>
+      </div>
+      <div class="selected-pills-container">
+        <div id="selected-pills"></div>
+      </div>
+    </div>
+    
+    <div class="bottom-bar-right">
+      <button class="btn-reset" id="btn-reset">Сбросить</button>
+      <button class="btn-continue" id="btn-continue">
+        Продолжить <i data-lucide="arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Модальное окно инициализации -->
+  <div class="init-modal" id="init-modal">
+    <div class="init-modal-content">
+      <div class="init-spinner"></div>
+      <h3 class="init-title">Инициализация AIROOM</h3>
+      <p class="init-desc">ИИ настраивает рабочее окружение и собирает компоненты под выбранные вами инструменты. Это займет пару мгновений...</p>
+    </div>
+  </div>
+
+  <!-- ФИНАЛЬНЫЙ JS-БЛОК -->
+  <script>
+    // Инициализация Lucide иконок
+    lucide.createIcons();
+
+    // Инициализация AOS анимаций
+    AOS.init({ duration: 680, once: true, offset: 40 });
+
+    // Sticky nav при скролле
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // GSAP появление шапки
+    gsap.from(".page-badge",    { y: -14, opacity: 0, duration: 0.6, delay: 0.1 });
+    gsap.from(".page-title",    { y: 22,  opacity: 0, duration: 0.7, delay: 0.3 });
+    gsap.from(".page-subtitle", { y: 16,  opacity: 0, duration: 0.6, delay: 0.45 });
+
+    // Логика выбора карточек
+    const cards = document.querySelectorAll('.tool-card');
+    const bar = document.getElementById('bottom-bar');
+    const countEl = document.getElementById('selected-count');
+    const pillsEl = document.getElementById('selected-pills');
+    const selected = new Set();
+
+    function updateBar() {
+      const hasItems = selected.size > 0;
+      bar.style.transform = hasItems ? 'translateY(0)' : 'translateY(100%)';
+      bar.style.opacity = hasItems ? '1' : '0';
+      bar.style.pointerEvents = hasItems ? 'all' : 'none';
+      
+      if (hasItems) {
+        let suffix = 'инструментов';
+        const num = selected.size;
+        if (num % 10 === 1 && num % 100 !== 11) {
+          suffix = 'инструмент';
+        } else if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) {
+          suffix = 'инструмента';
+        }
+        countEl.textContent = num + ' ' + suffix;
+      } else {
+        countEl.textContent = '0 инструментов';
+      }
+      
+      pillsEl.innerHTML = '';
+      selected.forEach(id => {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        const name = card.querySelector('.tool-name').textContent;
+        const pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.innerHTML = `${name} <i data-lucide="x"></i>`;
+        pill.addEventListener('click', (e) => { 
+          e.stopPropagation(); // Избегаем повторного срабатывания на самой карточке
+          selected.delete(id); 
+          card.classList.remove('selected'); 
+          updateBar(); 
+        });
+        pillsEl.appendChild(pill);
+      });
+      lucide.createIcons();
+    }
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        if (selected.has(id)) { 
+          selected.delete(id); 
+          card.classList.remove('selected'); 
+        } else { 
+          selected.add(id); 
+          card.classList.add('selected'); 
+        }
+        updateBar();
+      });
+    });
+
+    // Сбросить выбор
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      selected.clear();
+      cards.forEach(c => c.classList.remove('selected'));
+      updateBar();
+    });
+
+    // Мобильное меню
+    const burger = document.getElementById('burger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    burger.addEventListener('click', () => {
+      burger.classList.toggle('active');
+      mobileMenu.classList.toggle('open');
+      if (mobileMenu.classList.contains('open')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Бургер меню закрытие по ссылкам
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        burger.classList.remove('active');
+        mobileMenu.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+
+    // Анимация при нажатии "Продолжить"
+    const btnContinue = document.getElementById('btn-continue');
+    const initModal = document.getElementById('init-modal');
+
+    btnContinue.addEventListener('click', () => {
+      // Открываем модалку с анимацией загрузки
+      initModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      // Читаем список выбранных инструментов
+      const selectedTools = [];
+      selected.forEach(id => {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        selectedTools.push(card.querySelector('.tool-name').textContent);
+      });
+
+      // Перенаправляем на страницу мастера создания инфографики
+      setTimeout(() => {
+        initModal.classList.remove('active');
+        document.body.style.overflow = '';
+        window.location.href = '/infographics.html';
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
