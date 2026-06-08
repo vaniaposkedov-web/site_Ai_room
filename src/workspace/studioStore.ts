@@ -13,10 +13,9 @@ interface StudioState {
   toast: { text: string; icon?: string } | null
   setToast: (t: { text: string; icon?: string } | null) => void
 
-  // tool selection (select page)
-  selectedTools: string[]
-  toggleTool: (id: string) => void
-  resetTools: () => void
+  // tool selection (select page) — одна категория
+  tool: string
+  setTool: (id: string) => void
 
   // editor (infographics)
   productImage: string | null
@@ -51,10 +50,8 @@ export const useStudio = create<StudioState>((set) => ({
   toast: null,
   setToast: (t) => set({ toast: t }),
 
-  selectedTools: ['tool-1'],
-  toggleTool: (id) =>
-    set((s) => ({ selectedTools: s.selectedTools.includes(id) ? s.selectedTools.filter((x) => x !== id) : [...s.selectedTools, id] })),
-  resetTools: () => set({ selectedTools: [] }),
+  tool: 'tool-1',
+  setTool: (id) => set({ tool: id }),
 
   productImage: null,
   refImage: null,

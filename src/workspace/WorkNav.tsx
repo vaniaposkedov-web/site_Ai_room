@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { ArrowLeft, Sparkles, Star, Plus } from 'lucide-react'
 import { useModal } from '@/components/ModalProvider'
+import { useStudio } from '@/workspace/studioStore'
 
 export default function WorkNav({ backTo = '/' }: { backTo?: string }) {
   const { openLogin, openRegister } = useModal()
+  const balance = useStudio((s) => s.balance)
+  const topUp = useStudio((s) => s.topUp)
   return (
     <nav className="fixed top-0 inset-x-0 z-[1000] bg-[#1c1c1c]/85 backdrop-blur-xl border-b border-white/[0.08]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -28,6 +31,10 @@ export default function WorkNav({ backTo = '/' }: { backTo?: string }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/10 rounded-xl pl-2.5 pr-1 py-1.5">
+            <span className="flex items-center gap-1 font-bold text-[#F5C800] text-sm tabular-nums">{balance} <Star size={12} fill="currentColor" /></span>
+            <button onClick={() => topUp(50)} title="Пополнить (демо +50)" className="w-6 h-6 rounded-lg bg-[#F5C800]/15 text-[#F5C800] flex items-center justify-center hover:bg-[#F5C800]/25 transition-colors"><Plus size={13} /></button>
+          </div>
           <button onClick={openLogin} className="hidden sm:block text-sm text-white/80 hover:text-white px-3 py-2 transition-colors">Войти</button>
           <button
             onClick={openRegister}
