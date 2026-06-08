@@ -32,6 +32,7 @@ export default function OverlayCanvas({
   const productData = useWizard((s) => s.productData)
   const selectedResult = useWizard((s) => s.selectedResult)
   const design = useWizard((s) => s.design)
+  const adjust = useWizard((s) => s.adjust)
   const aspectRatio = useWizard((s) => s.generationSettings.aspectRatio)
   const setPosition = useWizard((s) => s.setPosition)
   const ref = useRef<HTMLDivElement>(null)
@@ -67,7 +68,12 @@ export default function OverlayCanvas({
       className="relative w-full max-w-[440px] mx-auto rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.08] select-none"
     >
       {bg ? (
-        <img src={bg} alt="card" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+        <img
+          src={bg}
+          alt="card"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ filter: `brightness(${adjust.brightness}%) contrast(${adjust.contrast}%) saturate(${adjust.saturation}%)` }}
+        />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">Нет изображения</div>
       )}

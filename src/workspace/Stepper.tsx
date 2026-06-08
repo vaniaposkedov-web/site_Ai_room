@@ -4,9 +4,9 @@ import { useWizard } from './store'
 
 export const STEPS = [
   { n: 1, label: 'Загрузка' },
-  { n: 2, label: 'Фон' },
-  { n: 3, label: 'Дизайн' },
-  { n: 4, label: 'Экспорт' },
+  { n: 2, label: 'Карточка' },
+  { n: 3, label: 'Правки' },
+  { n: 4, label: 'Сохранение' },
 ]
 
 export default function Stepper() {

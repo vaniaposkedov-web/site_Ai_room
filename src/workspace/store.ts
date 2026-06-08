@@ -38,7 +38,24 @@ export interface Design {
   styles: Record<string, Partial<ItemStyle>>
 }
 
+export interface Adjust { brightness: number; contrast: number; saturation: number }
+export interface StyleTemplate {
+  id: string
+  name: string
+  styles: Record<string, Partial<ItemStyle>>
+  positions: Record<string, { x: number; y: number }>
+  adjust: Adjust
+}
+
 export const defaultStyle = (id: string): ItemStyle => ({ color: '#FFFFFF', fontSize: id === 'title' ? 26 : 17 })
+export const defaultAdjust: Adjust = { brightness: 100, contrast: 100, saturation: 100 }
+
+const TPL_KEY = 'airoom_style_templates'
+const loadTemplates = (): StyleTemplate[] => {
+  try { return JSON.parse(localStorage.getItem(TPL_KEY) || '[]') } catch { return [] }
+}
+const saveTemplatesLs = (t: StyleTemplate[]) => localStorage.setItem(TPL_KEY, JSON.stringify(t))
+const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
 interface State {
   step: number
@@ -48,6 +65,9 @@ interface State {
   generatedResults: string[]
   selectedResult: string | null
   design: Design
+  adjust: Adjust
+  styleTemplates: StyleTemplate[]
+  savedPhotos: string[]
   toast: string | null
 
   setStep: (step: number) => void
@@ -69,6 +89,12 @@ interface State {
 
   setPosition: (id: string, pos: { x: number; y: number }) => void
   setStyle: (id: string, s: Partial<ItemStyle>) => void
+
+  setAdjust: (a: Partial<Adjust>) => void
+  saveStyleTemplate: (name: string) => void
+  applyStyleTemplate: (id: string) => void
+  deleteStyleTemplate: (id: string) => void
+  addSavedPhoto: (dataUrl: string) => void
 }
 
 const emptyProduct: ProductData = {
@@ -101,6 +127,9 @@ export const useWizard = create<State>((set) => ({
   generatedResults: [],
   selectedResult: null,
   design: { positions: {}, styles: {} },
+  adjust: defaultAdjust,
+  styleTemplates: loadTemplates(),
+  savedPhotos: [],
   toast: null,
 
   setStep: (step) => set({ step }),
@@ -131,4 +160,26 @@ export const useWizard = create<State>((set) => ({
 
   setPosition: (id, pos) => set((s) => ({ design: { ...s.design, positions: { ...s.design.positions, [id]: pos } } })),
   setStyle: (id, st) => set((s) => ({ design: { ...s.design, styles: { ...s.design.styles, [id]: { ...s.design.styles[id], ...st } } } })),
+
+  setAdjust: (a) => set((s) => ({ adjust: { ...s.adjust, ...a } })),
+  saveStyleTemplate: (name) =>
+    set((s) => {
+      const tpl: StyleTemplate = { id: uid(), name, styles: s.design.styles, positions: s.design.positions, adjust: s.adjust }
+      const list = [tpl, ...s.styleTemplates].slice(0, 24)
+      saveTemplatesLs(list)
+      return { styleTemplates: list }
+    }),
+  applyStyleTemplate: (id) =>
+    set((s) => {
+      const tpl = s.styleTemplates.find((t) => t.id === id)
+      if (!tpl) return s
+      return { design: { styles: tpl.styles, positions: tpl.positions }, adjust: tpl.adjust }
+    }),
+  deleteStyleTemplate: (id) =>
+    set((s) => {
+      const list = s.styleTemplates.filter((t) => t.id !== id)
+      saveTemplatesLs(list)
+      return { styleTemplates: list }
+    }),
+  addSavedPhoto: (dataUrl) => set((s) => ({ savedPhotos: [dataUrl, ...s.savedPhotos].slice(0, 30) })),
 }))
