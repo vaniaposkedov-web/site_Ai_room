@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { useWizard } from './store'
+import { Check } from 'lucide-react'
+import { useWizard, defaultStyle } from './store'
 
 export interface OverlayItem { id: string; text: string; kind: 'title' | 'feature' }
 
@@ -17,21 +18,34 @@ export function buildItems(title: string, features: string[]): OverlayItem[] {
   return items
 }
 
-export default function OverlayCanvas({ editable = false }: { editable?: boolean }) {
+const RATIO: Record<string, string> = { '3:4': '3 / 4', '1:1': '1 / 1', '16:9': '16 / 9' }
+
+export default function OverlayCanvas({
+  editable = false,
+  selectedId,
+  onSelect,
+}: {
+  editable?: boolean
+  selectedId?: string | null
+  onSelect?: (id: string) => void
+}) {
   const productData = useWizard((s) => s.productData)
+  const selectedResult = useWizard((s) => s.selectedResult)
   const design = useWizard((s) => s.design)
+  const aspectRatio = useWizard((s) => s.generationSettings.aspectRatio)
   const setPosition = useWizard((s) => s.setPosition)
   const ref = useRef<HTMLDivElement>(null)
   const [dragId, setDragId] = useState<string | null>(null)
 
-  const bg = productData.finalImage || productData.processedImage || productData.originalImage
+  const bg = selectedResult || productData.images[productData.selectedImageIndex] || productData.images[0] || null
   const items = buildItems(productData.title, productData.features)
-
+  const styleOf = (id: string) => ({ ...defaultStyle(id), ...design.styles[id] })
   const posOf = (id: string) => design.positions[id] ?? DEFAULT_POS[id] ?? { x: 6, y: 6 }
 
   const onPointerDown = (e: React.PointerEvent, id: string) => {
     if (!editable) return
     e.preventDefault()
+    onSelect?.(id)
     setDragId(id)
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
   }
@@ -49,7 +63,8 @@ export default function OverlayCanvas({ editable = false }: { editable?: boolean
       ref={ref}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      className="relative w-full max-w-[420px] mx-auto aspect-[3/4] rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.08] select-none"
+      style={{ aspectRatio: RATIO[aspectRatio] || '3 / 4' }}
+      className="relative w-full max-w-[440px] mx-auto rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.08] select-none"
     >
       {bg ? (
         <img src={bg} alt="card" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
@@ -59,7 +74,9 @@ export default function OverlayCanvas({ editable = false }: { editable?: boolean
 
       {items.map((it) => {
         const p = posOf(it.id)
+        const st = styleOf(it.id)
         const isTitle = it.kind === 'title'
+        const sel = editable && selectedId === it.id
         return (
           <div
             key={it.id}
@@ -67,19 +84,19 @@ export default function OverlayCanvas({ editable = false }: { editable?: boolean
             style={{
               left: `${p.x}%`,
               top: `${p.y}%`,
-              color: design.color,
-              fontSize: isTitle ? design.fontSize * 1.5 : design.fontSize,
+              color: st.color,
+              fontSize: st.fontSize,
               fontWeight: isTitle ? 800 : 600,
               maxWidth: '88%',
-              textShadow: design.color === '#FFFFFF' ? '0 1px 6px rgba(0,0,0,0.6)' : '0 1px 4px rgba(255,255,255,0.4)',
+              textShadow: st.color.toUpperCase() === '#FFFFFF' ? '0 1px 6px rgba(0,0,0,0.65)' : '0 1px 4px rgba(255,255,255,0.45)',
               cursor: editable ? (dragId === it.id ? 'grabbing' : 'grab') : 'default',
               touchAction: 'none',
             }}
-            className={`absolute font-display leading-tight ${editable ? 'rounded-md hover:ring-1 hover:ring-brand-yellow/60 px-1 -mx-1' : ''} ${
-              isTitle ? '' : 'flex items-center gap-1.5'
-            }`}
+            className={`absolute font-display leading-tight rounded-md px-1 -mx-1 ${
+              editable ? (sel ? 'ring-1 ring-brand-yellow' : 'hover:ring-1 hover:ring-brand-yellow/50') : ''
+            } ${isTitle ? '' : 'flex items-center gap-1.5'}`}
           >
-            {!isTitle && <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#FFE135' }} />}
+            {!isTitle && <Check size={Math.round(st.fontSize * 0.9)} className="text-brand-yellow flex-shrink-0" strokeWidth={3} />}
             {it.text}
           </div>
         )

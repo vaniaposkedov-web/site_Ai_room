@@ -22,6 +22,7 @@ export default function Workspace() {
   const step = useWizard((s) => s.step)
   const balance = useWizard((s) => s.balance)
   const productData = useWizard((s) => s.productData)
+  const selectedResult = useWizard((s) => s.selectedResult)
   const nextStep = useWizard((s) => s.nextStep)
   const prevStep = useWizard((s) => s.prevStep)
   const topUp = useWizard((s) => s.topUp)
@@ -32,8 +33,8 @@ export default function Workspace() {
   }, [])
 
   const canNext =
-    step === 1 ? !!productData.originalImage && productData.title.trim().length > 0
-      : step === 2 ? !!productData.finalImage
+    step === 1 ? productData.images.length > 0 && productData.title.trim().length > 0
+      : step === 2 ? !!selectedResult
         : true
 
   const meta = TITLES[step]

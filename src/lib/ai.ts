@@ -68,6 +68,20 @@ export async function analyzeProductImage(dataUrl: string): Promise<ProductTags>
 const SYSTEM_COMPETITOR =
   'Ты эксперт по карточкам маркетплейсов (Wildberries, Ozon). На вход — ссылка на товар конкурента и преимущества нашего товара. Дай краткий вывод на русском (2–3 предложения) о том, чем наша карточка с инфографикой выигрывает в выдаче. Обычный текст, без markdown.'
 
+const SYSTEM_PROMPT_IDEA =
+  'Ты промпт-инженер для генерации студийных фонов карточек товаров. Преврати короткое пожелание пользователя в один детальный профессиональный промпт на русском (1–2 предложения): опиши сцену, поверхность, свет, материалы и настроение. Верни только промпт, без markdown, кавычек и пояснений.'
+
+export async function improvePrompt(short: string, mode: string): Promise<string> {
+  const out = await chat(
+    [
+      { role: 'system', content: SYSTEM_PROMPT_IDEA },
+      { role: 'user', content: `Режим съёмки: ${mode}. Пожелание: ${short || 'красивый продающий фон для товара'}` },
+    ],
+    { maxTokens: 180, temperature: 0.85 },
+  )
+  return out.replace(/^["'`\s]+|["'`\s]+$/g, '').trim()
+}
+
 export async function analyzeCompetitor(url: string, product: { title: string; features: string[] }): Promise<string> {
   const user = `Ссылка конкурента: ${url || 'не указана'}\nНаш товар: ${product.title || 'товар'}\nНаши преимущества: ${product.features.filter(Boolean).join(', ') || 'не заданы'}`
   const out = await chat(

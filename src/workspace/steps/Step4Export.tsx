@@ -2,16 +2,16 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, Loader2, Search, ShieldCheck } from 'lucide-react'
 import OverlayCanvas, { DEFAULT_POS, buildItems } from '../OverlayCanvas'
-import { useWizard } from '../store'
+import { useWizard, defaultStyle } from '../store'
 import { analyzeCompetitor, hasAIKey } from '@/lib/ai'
 
 const MOCK_REPORT =
   'У конкурента нет инфографики. Ваши сгенерированные преимущества выгодно выделяют товар в выдаче и повышают кликабельность карточки.'
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export default function Step4Export() {
   const productData = useWizard((s) => s.productData)
+  const selectedResult = useWizard((s) => s.selectedResult)
   const design = useWizard((s) => s.design)
   const setToast = useWizard((s) => s.setToast)
 
@@ -20,8 +20,9 @@ export default function Step4Export() {
   const [analyzing, setAnalyzing] = useState(false)
   const [report, setReport] = useState<string | null>(null)
 
+  const bg = selectedResult || productData.images[0]
+
   const compose = async () => {
-    const bg = productData.finalImage || productData.originalImage
     if (!bg) return
     setDownloading(true)
     try {
@@ -35,46 +36,44 @@ export default function Step4Export() {
 
       const img = new Image()
       img.crossOrigin = 'anonymous'
-      await new Promise<void>((res, rej) => {
-        img.onload = () => res()
-        img.onerror = () => rej(new Error('img'))
-        img.src = bg
-      })
+      await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(new Error('img')); img.src = bg })
       const ratio = Math.max(W / img.width, H / img.height)
       const dw = img.width * ratio, dh = img.height * ratio
       ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh)
 
-      const scale = W / 420 // превью ~420px шириной
+      const scale = W / 440
       ctx.textBaseline = 'top'
-      ctx.shadowColor = design.color === '#FFFFFF' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'
-      ctx.shadowBlur = 8
       buildItems(productData.title, productData.features).forEach((it) => {
         const p = design.positions[it.id] ?? DEFAULT_POS[it.id] ?? { x: 6, y: 6 }
-        const fs = (it.kind === 'title' ? design.fontSize * 1.5 : design.fontSize) * scale
+        const st = { ...defaultStyle(it.id), ...design.styles[it.id] }
+        const fs = st.fontSize * scale
         ctx.font = `${it.kind === 'title' ? '800' : '600'} ${fs}px Inter, system-ui, sans-serif`
-        ctx.fillStyle = design.color
         const x = (p.x / 100) * W
         const y = (p.y / 100) * H
+        ctx.save()
+        ctx.shadowColor = st.color.toUpperCase() === '#FFFFFF' ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.45)'
+        ctx.shadowBlur = 8
         if (it.kind === 'feature') {
-          ctx.save(); ctx.shadowBlur = 0
+          ctx.shadowBlur = 0
           ctx.fillStyle = '#FFE135'
-          ctx.beginPath(); ctx.arc(x + fs * 0.3, y + fs * 0.55, fs * 0.18, 0, Math.PI * 2); ctx.fill()
-          ctx.restore()
-          ctx.fillStyle = design.color
-          ctx.fillText(it.text, x + fs * 0.8, y)
+          ctx.beginPath(); ctx.arc(x + fs * 0.3, y + fs * 0.55, fs * 0.2, 0, Math.PI * 2); ctx.fill()
+          ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8
+          ctx.fillStyle = st.color
+          ctx.fillText(it.text, x + fs * 0.85, y)
         } else {
+          ctx.fillStyle = st.color
           ctx.fillText(it.text, x, y)
         }
+        ctx.restore()
       })
 
-      const dataUrl = canvas.toDataURL('image/png')
       const a = document.createElement('a')
-      a.href = dataUrl
+      a.href = canvas.toDataURL('image/png')
       a.download = 'airoom-card.png'
       a.click()
     } catch {
-      setToast('Не удалось склеить изображение (CORS). Скачиваем фон отдельно.')
-      window.open(productData.finalImage || productData.originalImage || '', '_blank')
+      setToast('Не удалось склеить изображение (CORS). Открываем фон отдельно.')
+      window.open(bg, '_blank')
     } finally {
       setDownloading(false)
     }
@@ -106,8 +105,8 @@ export default function Step4Export() {
         <OverlayCanvas />
         <button
           onClick={compose}
-          disabled={downloading || !productData.finalImage}
-          className="mt-4 w-full max-w-[420px] mx-auto flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={downloading || !bg}
+          className="mt-4 w-full max-w-[440px] mx-auto flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand-yellow text-brand-dark font-display font-bold disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {downloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
           {downloading ? 'Готовим файл…' : 'Скачать PNG'}
@@ -145,11 +144,7 @@ export default function Step4Export() {
           )}
 
           {report && !analyzing && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 rounded-xl border border-[#4ADE80]/30 bg-[#4ADE80]/[0.06] p-4"
-            >
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-xl border border-[#4ADE80]/30 bg-[#4ADE80]/[0.06] p-4">
               <div className="flex items-center gap-2 text-[#4ADE80] font-semibold text-sm mb-2">
                 <ShieldCheck size={16} /> Отчёт
               </div>
