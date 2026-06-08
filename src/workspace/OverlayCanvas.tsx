@@ -18,7 +18,7 @@ export function buildItems(title: string, features: string[]): OverlayItem[] {
   return items
 }
 
-const RATIO: Record<string, string> = { '3:4': '3 / 4', '1:1': '1 / 1', '16:9': '16 / 9' }
+const RATIO: Record<string, string> = { '9:16': '9 / 16', '3:4': '3 / 4', '1:1': '1 / 1', '4:3': '4 / 3', '16:9': '16 / 9' }
 
 export default function OverlayCanvas({
   editable = false,

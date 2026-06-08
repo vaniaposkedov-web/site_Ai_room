@@ -12,13 +12,23 @@ export interface ProductData {
 }
 
 export type GenMode = 'interior' | 'studio' | 'person' | 'custom'
+export type GenType = 'photo' | 'card' | 'video'
+export type AspectRatio = '9:16' | '3:4' | '1:1' | '4:3' | '16:9'
+export type Resolution = '1K' | '2K' | '4K'
+export type PhotoStyle = 'commercial' | 'home'
 
 export interface GenerationSettings {
   mode: GenMode
+  genType: GenType
   prompt: string
-  aspectRatio: '3:4' | '1:1' | '16:9'
+  aspectRatio: AspectRatio
+  resolution: Resolution
+  photoStyle: PhotoStyle
   lighting: 'auto' | 'left' | 'right' | 'top'
   negativePrompt: string
+  variants: number          // 1..4
+  modelRef: string | null   // фото модели
+  envRef: string | null     // фото окружения
 }
 
 export interface ItemStyle { color: string; fontSize: number }
@@ -71,10 +81,16 @@ const emptyProduct: ProductData = {
 
 const defaultSettings: GenerationSettings = {
   mode: 'studio',
+  genType: 'photo',
   prompt: '',
   aspectRatio: '3:4',
+  resolution: '2K',
+  photoStyle: 'commercial',
   lighting: 'auto',
   negativePrompt: '',
+  variants: 2,
+  modelRef: null,
+  envRef: null,
 }
 
 export const useWizard = create<State>((set) => ({
