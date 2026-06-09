@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Sparkles, Star, Plus } from 'lucide-react'
 import { useModal } from '@/components/ModalProvider'
 import { useStudio } from '@/workspace/studioStore'
+import ProfileMenu from '@/workspace/ProfileMenu'
 
 export default function WorkNav({ backTo = '/' }: { backTo?: string }) {
   const { openLogin, openRegister } = useModal()
@@ -35,13 +36,14 @@ export default function WorkNav({ backTo = '/' }: { backTo?: string }) {
             <span className="flex items-center gap-1 font-bold text-[#F5C800] text-sm tabular-nums">{balance} <Star size={12} fill="currentColor" /></span>
             <button onClick={() => topUp(50)} title="Пополнить (демо +50)" className="w-6 h-6 rounded-lg bg-[#F5C800]/15 text-[#F5C800] flex items-center justify-center hover:bg-[#F5C800]/25 transition-colors"><Plus size={13} /></button>
           </div>
-          <button onClick={openLogin} className="hidden sm:block text-sm text-white/80 hover:text-white px-3 py-2 transition-colors">Войти</button>
+          <button onClick={openLogin} className="hidden md:block text-sm text-white/80 hover:text-white px-3 py-2 transition-colors">Войти</button>
           <button
             onClick={openRegister}
-            className="flex items-center gap-1.5 bg-[#F5C800] text-[#111] font-semibold text-sm px-4 py-2 rounded-xl hover:bg-[#e0b400] transition-colors"
+            className="hidden md:flex items-center gap-1.5 bg-[#F5C800] text-[#111] font-semibold text-sm px-4 py-2 rounded-xl hover:bg-[#e0b400] transition-colors"
           >
-            <Sparkles size={14} /> <span className="hidden sm:inline">Начать&nbsp;</span>проект
+            <Sparkles size={14} /> Начать проект
           </button>
+          <ProfileMenu />
         </div>
       </div>
     </nav>

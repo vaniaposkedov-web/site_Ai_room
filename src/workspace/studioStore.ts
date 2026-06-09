@@ -5,6 +5,25 @@ export type Format = '9:16' | '3:4' | '1:1' | '4:3' | '4:5' | '16:9'
 export type Resolution = '1k' | '2k' | '4k'
 export type StyleMode = 'copy' | 'inspire'
 
+export interface GenItem {
+  id: string
+  toolId: string
+  toolName: string
+  kind: 'image' | 'text'
+  image?: string
+  text?: string
+  liked: boolean
+  ts: number
+}
+export interface Stats { total: number; byTool: Record<string, number>; liked: number }
+
+const STATS_KEY = 'airoom_stats'
+const loadStats = (): Stats => {
+  try { return { total: 0, byTool: {}, liked: 0, ...JSON.parse(localStorage.getItem(STATS_KEY) || '{}') } } catch { return { total: 0, byTool: {}, liked: 0 } }
+}
+const saveStats = (s: Stats) => localStorage.setItem(STATS_KEY, JSON.stringify(s))
+const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+
 interface StudioState {
   // billing
   balance: number
@@ -41,6 +60,12 @@ interface StudioState {
   setResolution: (r: Resolution) => void
   setResultImage: (v: string | null) => void
   resetEditor: () => void
+
+  // история и статистика
+  history: GenItem[]
+  stats: Stats
+  addGeneration: (g: { toolId: string; toolName: string; kind: 'image' | 'text'; image?: string; text?: string }) => string
+  toggleLike: (id: string) => void
 }
 
 export const useStudio = create<StudioState>((set) => ({
@@ -77,4 +102,25 @@ export const useStudio = create<StudioState>((set) => ({
   setResultImage: (v) => set({ resultImage: v }),
   resetEditor: () =>
     set({ productImage: null, refImage: null, category: '', type: '', specs: [], infographicText: '', resultImage: null }),
+
+  history: [],
+  stats: loadStats(),
+  addGeneration: (g) => {
+    const id = uid()
+    set((s) => {
+      const byTool = { ...s.stats.byTool, [g.toolId]: (s.stats.byTool[g.toolId] ?? 0) + 1 }
+      const stats: Stats = { total: s.stats.total + 1, byTool, liked: s.stats.liked }
+      saveStats(stats)
+      return { history: [{ id, ...g, liked: false, ts: Date.now() }, ...s.history].slice(0, 40), stats }
+    })
+    return id
+  },
+  toggleLike: (id) =>
+    set((s) => {
+      const history = s.history.map((h) => (h.id === id ? { ...h, liked: !h.liked } : h))
+      const delta = history.find((h) => h.id === id)?.liked ? 1 : -1
+      const stats: Stats = { ...s.stats, liked: Math.max(0, s.stats.liked + delta) }
+      saveStats(stats)
+      return { history, stats }
+    }),
 }))

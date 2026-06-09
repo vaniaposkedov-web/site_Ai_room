@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import WorkNav from '@/workspace/WorkNav'
 import { useStudio, type Format } from '@/workspace/studioStore'
-import { getTool } from '@/workspace/tools'
+import { getTool, buildPrompt, buildSystem } from '@/workspace/tools'
 import { detectProduct, infographicIdea, generateImage, generateText, hasAIKey } from '@/lib/ai'
 
 const GRID_BG = {
@@ -91,10 +91,12 @@ export default function Infographics() {
   const [loaderMsg, setLoaderMsg] = useState(LOADER_MSGS[0])
   const [feedback, setFeedback] = useState<'like' | null>(null)
   const [resultText, setResultText] = useState<string | null>(null)
+  const [lastGenId, setLastGenId] = useState<string | null>(null)
   const productInput = useRef<HTMLInputElement>(null)
   const refInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => { if (!s.tool) navigate('/app') }, []) // eslint-disable-line
+  useEffect(() => { window.scrollTo({ top: 0 }) }, [step]) // шаг сменился — наверх
 
   const detect = async (dataUrl: string) => {
     if (!hasAIKey()) { s.setToast({ text: 'AI-ключ не задан — заполните вручную', icon: 'cpu' }); return }
@@ -147,21 +149,27 @@ export default function Infographics() {
     let p = 0; const pi = window.setInterval(() => { p = Math.min(92, p + Math.random() * 7); setProgress(p) }, 450)
     let mi2 = 0; setLoaderMsg(LOADER_MSGS[0]); const mi = window.setInterval(() => { mi2 = Math.min(mi2 + 1, LOADER_MSGS.length - 1); setLoaderMsg(LOADER_MSGS[mi2]) }, 1300)
     const ctx = { type: s.type, category: s.category, specs: s.specs, text: s.infographicText, format: s.format, styleMode: s.styleMode, hasRef: !!s.refImage }
+    let outImage: string | null = null
+    let outText: string | null = null
     try {
       if (!hasAIKey()) throw new Error('NO_KEY')
       if (tool.kind === 'image') {
         const inputs = s.productImage ? [s.productImage, ...(s.refImage ? [s.refImage] : [])] : []
-        const img = await generateImage(tool.prompt(ctx), inputs)
-        s.setResultImage(img); setResultText(null)
+        outImage = await generateImage(buildPrompt(s.tool, ctx), inputs)
+        s.setResultImage(outImage); setResultText(null)
       } else {
-        const txt = await generateText(tool.system ?? '', tool.prompt(ctx), { maxTokens: 600 })
-        setResultText(txt); s.setResultImage(null)
+        outText = await generateText(buildSystem(s.tool), buildPrompt(s.tool, ctx), { maxTokens: 600 })
+        setResultText(outText); s.setResultImage(null)
       }
     } catch {
-      if (tool.kind === 'image') { const c = await compose().catch(() => null); s.setResultImage(c); if (!c) s.setToast({ text: 'Не удалось сгенерировать', icon: 'cpu' }) }
+      if (tool.kind === 'image') { outImage = await compose().catch(() => null); s.setResultImage(outImage); if (!outImage) s.setToast({ text: 'Не удалось сгенерировать', icon: 'cpu' }) }
       else { s.setToast({ text: 'Не удалось сгенерировать текст', icon: 'cpu' }) }
     } finally {
       window.clearInterval(pi); window.clearInterval(mi); setProgress(100)
+      if (outImage || outText) {
+        const id = s.addGeneration({ toolId: s.tool, toolName: tool.name, kind: tool.kind, image: outImage ?? undefined, text: outText ?? undefined })
+        setLastGenId(id)
+      }
       setLoading(false); setStep(3); s.setToast({ text: 'Готово!', icon: 'sparkles' })
     }
   }
@@ -173,11 +181,12 @@ export default function Infographics() {
   const aspectCss = s.format.replace(':', '/')
 
   return (
-    <div className="min-h-screen text-white font-['Onest']" style={GRID_BG}>
+    <div className="min-h-screen text-white font-['Onest'] relative overflow-hidden" style={GRID_BG}>
       <WorkNav backTo="/app" />
-      <div className="pointer-events-none absolute top-[-100px] left-[20%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.04), transparent 70%)' }} />
+      <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 9, repeat: Infinity }} className="pointer-events-none absolute -top-24 left-[18%] w-[600px] h-[600px] rounded-full blur-[110px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.07), transparent 70%)' }} />
+      <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 11, repeat: Infinity, delay: 1 }} className="pointer-events-none absolute bottom-0 right-[5%] w-[480px] h-[480px] rounded-full blur-[110px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.05), transparent 70%)' }} />
 
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-28 pb-24">
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <div className="text-center mb-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#F5C800]/25 bg-[#F5C800]/[0.06] px-3.5 py-1.5 text-[11px] tracking-wider text-[#F5C800]">
             <tool.icon size={13} /> {tool.name}
@@ -339,7 +348,7 @@ export default function Infographics() {
               <div className="text-center mt-6">
                 <div className="text-sm text-white/55 mb-2.5">Как вам результат?</div>
                 <div className="flex justify-center gap-3">
-                  <button onClick={() => { setFeedback('like'); s.setToast({ text: 'Спасибо за оценку!', icon: 'thumbs-up' }) }} className="flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm transition-colors" style={{ borderColor: feedback === 'like' ? ACCENT : 'rgba(255,255,255,0.1)', color: feedback === 'like' ? ACCENT : 'rgba(255,255,255,0.7)' }}><ThumbsUp size={15} /> Отлично</button>
+                  <button onClick={() => { if (lastGenId) s.toggleLike(lastGenId); const next = feedback === 'like' ? null : 'like'; setFeedback(next); s.setToast({ text: next ? 'Добавлено в понравившееся!' : 'Убрано из понравившихся', icon: 'thumbs-up' }) }} className="flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm transition-colors" style={{ borderColor: feedback === 'like' ? ACCENT : 'rgba(255,255,255,0.1)', color: feedback === 'like' ? ACCENT : 'rgba(255,255,255,0.7)' }}><ThumbsUp size={15} className={feedback === 'like' ? 'fill-[#F5C800]' : ''} /> Отлично</button>
                   <button onClick={runGeneration} className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 text-white/70 text-sm hover:border-white/20"><ThumbsDown size={15} /> Переделать</button>
                 </div>
               </div>

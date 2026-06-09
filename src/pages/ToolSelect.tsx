@@ -28,10 +28,10 @@ export default function ToolSelect() {
   return (
     <div className="min-h-screen text-white font-['Onest'] relative overflow-hidden" style={GRID_BG}>
       <WorkNav />
-      <div className="pointer-events-none absolute top-[8%] -left-40 w-[500px] h-[500px] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.06), transparent 70%)' }} />
-      <div className="pointer-events-none absolute bottom-[10%] -right-40 w-[600px] h-[600px] rounded-full blur-[90px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.05), transparent 70%)' }} />
+      <motion.div animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.85, 0.5] }} transition={{ duration: 10, repeat: Infinity }} className="pointer-events-none absolute top-[6%] -left-40 w-[500px] h-[500px] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.07), transparent 70%)' }} />
+      <motion.div animate={{ scale: [1, 1.22, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 13, repeat: Infinity, delay: 1.5 }} className="pointer-events-none absolute bottom-[8%] -right-40 w-[600px] h-[600px] rounded-full blur-[90px]" style={{ background: 'radial-gradient(circle, rgba(245,200,0,0.05), transparent 70%)' }} />
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-32 pb-24">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20">
         {/* header */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-[11px] tracking-[0.1em] text-white/55">
